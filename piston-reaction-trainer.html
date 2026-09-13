@@ -19,7 +19,14 @@
       var(--paper);
     color:var(--ink); min-height:100vh; padding:18px 12px 40px;
   }
-  .wrap{max-width:600px;margin:0 auto;}
+  .wrap{max-width:900px;margin:0 auto;}
+  .layout{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;}
+  .layout .card{flex:1 1 340px;margin-top:0;}
+  .layout .notewrap{flex:1 1 280px;margin-top:0;position:sticky;top:10px;}
+  @media (max-width:680px){
+    .layout{flex-direction:column;}
+    .layout .notewrap{position:static;width:100%;}
+  }
   h1{font-family:Georgia,"Iowan Old Style",serif;font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
   .sub{color:var(--inkfade);font-size:13.5px;margin:0;line-height:1.5;}
   .statusbar{
@@ -71,6 +78,19 @@
   .breakdown{margin-top:18px;text-align:left;font-size:13px;border-top:1px solid var(--line);padding-top:14px;}
   .breakdown .row{display:flex;justify-content:space-between;padding:4px 0;color:var(--inkfade);}
   .breakdown .row b{color:var(--ink);}
+
+  .notewrap{background:#fff;border:1px solid var(--line);border-radius:4px;margin-top:14px;overflow:hidden;}
+  .noteHeader{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line);}
+  .noteHeader .title{font-size:12.5px;color:var(--inkfade);font-weight:600;}
+  .noteToolbar{display:flex;align-items:center;gap:8px;}
+  .swatch{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
+  .swatch.active{border-color:var(--accent);box-shadow:0 0 0 2px #fff inset;}
+  .toolbtn{border:1px solid var(--line);background:var(--paper2);border-radius:4px;padding:5px 10px;font-size:12px;color:var(--ink);cursor:pointer;}
+  .toolbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .toolbtn.clear{color:var(--bad);border-color:var(--bad);background:#fff;}
+  #noteCanvas{display:block;width:100%;height:420px;touch-action:none;background:
+      repeating-linear-gradient(0deg, transparent, transparent 25px, rgba(120,140,125,0.15) 26px),
+      #FBFCFA;}
 </style>
 </head>
 <body>
@@ -83,7 +103,23 @@
       <span>누적 정답 <b id="cumStat">0/0</b></span>
     </div>
   </header>
-  <div class="card" id="card"></div>
+  <div class="layout">
+    <div class="card" id="card"></div>
+
+    <div class="notewrap">
+      <div class="noteHeader">
+        <span class="title">메모장 (Apple Pencil로 필기)</span>
+        <div class="noteToolbar">
+          <button class="swatch active" data-color="#1B2A23" style="background:#1B2A23" title="검정"></button>
+          <button class="swatch" data-color="#B4483F" style="background:#B4483F" title="빨강"></button>
+          <button class="swatch" data-color="#2A5C8A" style="background:#2A5C8A" title="파랑"></button>
+          <button class="toolbtn" id="eraserBtn">지우개</button>
+          <button class="toolbtn clear" id="clearNoteBtn">전체 지우기</button>
+        </div>
+      </div>
+      <canvas id="noteCanvas"></canvas>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -335,6 +371,110 @@ function genLimiting(){
     <p class="question">${questionText}</p>`;
   return {promptHTML, choices, correct:String(correctVal), explanation};
 }
+
+// ============================================================
+// scratchpad (Apple Pencil / touch / mouse drawing)
+// ============================================================
+(function(){
+  const canvas = document.getElementById('noteCanvas');
+  const ctx = canvas.getContext('2d');
+  const NOTE_HEIGHT = 420;
+  let strokes = [];
+  let currentStroke = null;
+  let drawing = false;
+  let currentColor = '#1B2A23';
+  let eraserOn = false;
+
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, rect.width) * dpr;
+    canvas.height = NOTE_HEIGHT * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    redrawAll(rect.width);
+  }
+
+  function getPoint(e){
+    const rect = canvas.getBoundingClientRect();
+    return {
+      xf: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top),
+      pressure: (e.pressure && e.pressure > 0) ? e.pressure : 0.5
+    };
+  }
+
+  function strokeStyleFor(s){
+    return { width: s.eraser ? 20 : (1.4 + (s.avgPressure||0.5)*2.2), color: s.color, eraser: s.eraser };
+  }
+
+  function drawStrokeSegment(s, widthPx, p0, p1, cssWidth){
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
+    ctx.lineWidth = widthPx;
+    ctx.beginPath();
+    ctx.moveTo(p0.xf*cssWidth, p0.y);
+    ctx.lineTo(p1.xf*cssWidth, p1.y);
+    ctx.stroke();
+  }
+
+  function redrawAll(cssWidth){
+    cssWidth = cssWidth || canvas.getBoundingClientRect().width;
+    ctx.clearRect(0,0,cssWidth,NOTE_HEIGHT);
+    strokes.forEach(s=>{
+      const w = s.eraser ? 20 : (1.4 + (s.avgPressure||0.5)*2.2);
+      for(let i=1;i<s.points.length;i++){
+        drawStrokeSegment(s, w, s.points[i-1], s.points[i], cssWidth);
+      }
+    });
+    ctx.globalCompositeOperation='source-over';
+  }
+
+  canvas.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    drawing = true;
+    const p = getPoint(e);
+    currentStroke = { color: currentColor, eraser: eraserOn, points:[p], avgPressure: p.pressure };
+    strokes.push(currentStroke);
+  });
+  canvas.addEventListener('pointermove', e=>{
+    if(!drawing || !currentStroke) return;
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const prev = currentStroke.points[currentStroke.points.length-1];
+    const p = getPoint(e);
+    currentStroke.points.push(p);
+    currentStroke.avgPressure = (currentStroke.avgPressure + p.pressure)/2;
+    const w = currentStroke.eraser ? 20 : (1.4 + currentStroke.avgPressure*2.2);
+    drawStrokeSegment(currentStroke, w, prev, p, rect.width);
+  });
+  function endStroke(e){ drawing=false; currentStroke=null; try{canvas.releasePointerCapture(e.pointerId);}catch(err){} }
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
+  canvas.addEventListener('pointerleave', ()=>{ if(drawing){ /* keep drawing until pointerup with capture */ } });
+
+  document.querySelectorAll('.swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
+      sw.classList.add('active');
+      currentColor = sw.dataset.color;
+      eraserOn = false;
+      document.getElementById('eraserBtn').classList.remove('active');
+    });
+  });
+  document.getElementById('eraserBtn').addEventListener('click', ()=>{
+    eraserOn = !eraserOn;
+    document.getElementById('eraserBtn').classList.toggle('active', eraserOn);
+  });
+  document.getElementById('clearNoteBtn').addEventListener('click', ()=>{
+    strokes = [];
+    redrawAll();
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+})();
 
 // ============================================================
 // controller
