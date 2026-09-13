@@ -3,395 +3,468 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>피스톤 속 분자 반응</title>
+<title>화학 반응식 트레이너</title>
 <style>
   :root{
-    --paper:#EEF2ED;
-    --paper2:#E4EAE3;
-    --ink:#1B2A23;
-    --inkfade:#5B6B61;
-    --blue:#2A5C8A;
-    --blueSoft:#3E6E9C;
-    --red:#B4483F;
-    --redSoft:#C15C53;
-    --line:#C7D0C8;
-    --good:#3F7D5C;
-    --bad:#A23B3B;
-    --accent:#C98A2B;
-    --wall:#8B958E;
+    --paper:#EEF2ED; --paper2:#E4EAE3; --ink:#1B2A23; --inkfade:#5B6B61;
+    --blue:#2A5C8A; --red:#B4483F; --line:#C7D0C8;
+    --good:#3F7D5C; --bad:#A23B3B; --accent:#C98A2B; --wall:#8B958E;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Pretendard, sans-serif;
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Pretendard,sans-serif;
     background:
       repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(120,140,125,0.08) 28px),
       repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(120,140,125,0.08) 28px),
       var(--paper);
-    color:var(--ink);
-    min-height:100vh;
-    padding:18px 12px 40px;
+    color:var(--ink); min-height:100vh; padding:18px 12px 40px;
   }
   .wrap{max-width:600px;margin:0 auto;}
-  header{margin-bottom:18px;}
-  h1{
-    font-family: Georgia, "Iowan Old Style", serif;
-    font-size:26px;
-    font-weight:600;
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
+  h1{font-family:Georgia,"Iowan Old Style",serif;font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
+  .sub{color:var(--inkfade);font-size:13.5px;margin:0;line-height:1.5;}
+  .statusbar{
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;
+    margin-top:14px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--inkfade);
   }
-  .sub{color:var(--inkfade);font-size:14px;margin:0;line-height:1.5;}
-  .scorebar{
-    display:flex;justify-content:space-between;align-items:baseline;
-    margin-top:14px;padding-top:10px;border-top:1px solid var(--line);
-    font-size:13px;color:var(--inkfade);
-  }
-  .scorebar b{color:var(--ink);font-size:15px;}
-  .card{
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:4px;
-    padding:20px 18px 22px;
-    margin-top:16px;
-  }
-  .prompt{font-size:15px;line-height:1.6;margin:0 0 14px;}
-  .prompt .eq{
-    display:block;margin-top:6px;font-family:Georgia,serif;font-size:16px;color:var(--blue);
-  }
-  .stage{
-    display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px;
-  }
+  .statusbar b{color:var(--ink);font-size:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:20px 18px 22px;margin-top:14px;}
+  .prompt{font-size:15px;line-height:1.65;margin:0 0 14px;}
+  .prompt .eq{display:block;margin-top:8px;font-family:Georgia,serif;font-size:16px;color:var(--blue);}
+  .stmt{margin:4px 0;padding-left:2px;}
+  .stmt b{color:var(--blue);margin-right:4px;}
+  .stage{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px;}
   .containerBlock{text-align:center;}
   .containerBlock .label{font-size:12px;color:var(--inkfade);margin-bottom:4px;}
-  svg.vessel{width:150px;max-width:38vw;height:auto;display:block;margin:0 auto;}
+  svg.vessel{width:140px;max-width:36vw;height:auto;display:block;margin:0 auto;}
   .arrow{font-size:22px;color:var(--wall);padding:0 4px;}
-  .legend{
-    display:flex;gap:14px;justify-content:center;align-items:center;
-    font-size:12.5px;color:var(--inkfade);margin:8px 0 18px;
-  }
+  .legend{display:flex;gap:14px;justify-content:center;align-items:center;font-size:12.5px;color:var(--inkfade);margin:8px 0 4px;}
   .legend span{display:inline-flex;align-items:center;gap:5px;}
   .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
-  .dotA{background:var(--blue);}
-  .dotB{background:var(--red);}
+  .dotA{background:var(--blue);} .dotB{background:var(--red);}
+  .boxrow{display:flex;align-items:center;justify-content:center;gap:14px;margin:14px 0;flex-wrap:wrap;}
+  .box{border:1.5px solid var(--wall);border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;font-size:14px;background:var(--paper2);}
+  .box .t{font-size:11.5px;color:var(--inkfade);margin-bottom:6px;}
   .question{font-size:15px;font-weight:600;margin:16px 0 12px;}
   .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
   @media (max-width:400px){.choices{grid-template-columns:1fr 1fr;}}
-  .choice{
-    border:1.5px solid var(--line);
-    background:var(--paper2);
-    border-radius:4px;
-    padding:11px 8px;
-    font-size:15px;
-    font-family:Georgia,serif;
-    text-align:center;
-    cursor:pointer;
-    transition:border-color .12s, background .12s;
-  }
+  .choice{border:1.5px solid var(--line);background:var(--paper2);border-radius:4px;padding:11px 8px;font-size:14.5px;font-family:Georgia,serif;text-align:center;cursor:pointer;transition:border-color .12s,background .12s;}
   .choice:hover:not(:disabled){border-color:var(--blue);}
   .choice:disabled{cursor:default;}
   .choice.correct{background:#E4F0E9;border-color:var(--good);color:var(--good);}
   .choice.wrong{background:#F5E6E4;border-color:var(--bad);color:var(--bad);}
-  .feedback{
-    margin-top:16px;padding:13px 14px;border-radius:4px;font-size:14px;line-height:1.65;
-    display:none;
-  }
+  .feedback{margin-top:16px;padding:13px 14px;border-radius:4px;font-size:13.8px;line-height:1.65;display:none;}
   .feedback.show{display:block;}
   .feedback.ok{background:#E4F0E9;border:1px solid var(--good);}
   .feedback.no{background:#F5E6E4;border:1px solid var(--bad);}
   .feedback .verdict{font-weight:700;margin-bottom:6px;}
-  .feedback .verdict.ok{color:var(--good);}
-  .feedback .verdict.no{color:var(--bad);}
-  .expl{margin-top:8px;color:var(--ink);}
+  .feedback .verdict.ok{color:var(--good);} .feedback .verdict.no{color:var(--bad);}
   .expl div{margin-bottom:3px;}
   .actions{margin-top:18px;display:flex;justify-content:flex-end;}
-  button.next{
-    background:var(--accent);color:#fff;border:none;border-radius:4px;
-    padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;
-    display:none;
-  }
+  button.next{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;display:none;}
   button.next.show{display:inline-block;}
   button.next:hover{opacity:0.9;}
-  .hint{font-size:12px;color:var(--inkfade);margin-top:10px;}
+  .typeTag{display:inline-block;font-size:11px;color:var(--inkfade);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin-bottom:10px;}
+  .resultWrap{text-align:center;padding:20px 6px;}
+  .resultWrap .big{font-family:Georgia,serif;font-size:42px;color:var(--blue);margin:6px 0 2px;}
+  .resultWrap .lbl{font-size:14px;color:var(--inkfade);}
+  .resultWrap .badge{margin-top:14px;font-size:13px;color:var(--accent);font-weight:600;}
+  .breakdown{margin-top:18px;text-align:left;font-size:13px;border-top:1px solid var(--line);padding-top:14px;}
+  .breakdown .row{display:flex;justify-content:space-between;padding:4px 0;color:var(--inkfade);}
+  .breakdown .row b{color:var(--ink);}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>피스톤 속 분자 반응</h1>
-    <p class="sub">AB(g)와 B₂(g)가 반응해 X(g)를 만드는 모형 문제를 무한히 연습합니다. 온도와 압력은 항상 일정합니다.</p>
-    <div class="scorebar">
-      <span>이번 세트 정답률</span>
-      <span><b id="scoreCorrect">0</b> / <span id="scoreTotal">0</span></span>
+    <h1>화학 반응식 트레이너</h1>
+    <p class="sub">기체 반응 몰비, 계수비, 참/거짓 판별, 한정 반응물 문제를 10문제 세트로 연습합니다.</p>
+    <div class="statusbar">
+      <span id="roundLabel">세트 1 · 1/10</span>
+      <span>누적 정답 <b id="cumStat">0/0</b></span>
     </div>
   </header>
-
-  <div class="card">
-    <p class="prompt">그림은 AB(g)와 B₂(g)가 반응하여 X(g)를 생성하는 반응을 모형으로 나타낸 것이다. X의 모형은 나타내지 않았다.
-      <span class="eq" id="eqLine"></span>
-    </p>
-
-    <div class="stage">
-      <div class="containerBlock">
-        <div class="label">반응 전</div>
-        <svg class="vessel" id="beforeSvg" viewBox="0 0 190 240"></svg>
-      </div>
-      <div class="arrow">→</div>
-      <div class="containerBlock">
-        <div class="label">반응 후</div>
-        <svg class="vessel" id="afterSvg" viewBox="0 0 190 240"></svg>
-      </div>
-    </div>
-
-    <div class="legend">
-      <span><i class="dot dotA"></i>A</span>
-      <span><i class="dot dotB"></i>B</span>
-    </div>
-
-    <p class="question">X의 화학식으로 가장 적절한 것은? (A와 B는 임의의 원소 기호이다.)</p>
-    <div class="choices" id="choices"></div>
-
-    <div class="feedback" id="feedback">
-      <div class="verdict" id="verdict"></div>
-      <div class="expl" id="expl"></div>
-    </div>
-
-    <div class="actions">
-      <button class="next" id="nextBtn">다음 문제</button>
-    </div>
-    <p class="hint">힌트: 반응 전후 원자의 종류와 개수는 절대 변하지 않습니다. A 원자 수와 B 원자 수를 각각 세어 보세요.</p>
-  </div>
+  <div class="card" id="card"></div>
 </div>
 
 <script>
-const BLUE = getCss('--blue'), RED = getCss('--red'), WALL = getCss('--wall');
-function getCss(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+const BLUE = '#2A5C8A', RED = '#B4483F', WALL = '#8B958E';
 
-let score = {correct:0, total:0};
-let current = null;
-let answered = false;
-
-const TEMPLATES = [
-  {name:'AB2', p0:2, q0:1, r0:2, m:1, n:2},
-  {name:'AB3', p0:1, q0:1, r0:1, m:1, n:3},
-];
-
+// ---------- utils ----------
 function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function choice(arr){return arr[randInt(0,arr.length-1)];}
-function formulaText(m,n){
-  const aPart = 'A' + (m>1? m : '');
-  const bPart = 'B' + (n>1? n : '');
-  return aPart+bPart;
-}
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);return b?gcd(b,a%b):(a||1);}
+function subscript(s){return s.replace(/(\d+)/g,'<sub>$1</sub>');}
+function uniq(arr){return [...new Set(arr)];}
 
-function genProblem(){
-  const t = choice(TEMPLATES);
-  const k = randInt(1,2);
-  const p = t.p0*k, q = t.q0*k, r = t.r0*k; // reacted amounts
-  const extraB2 = Math.random() < 0.65 ? randInt(0,2) : 0;
+// ============================================================
+// TYPE 1: piston mole-ratio -> formula of X
+// ============================================================
+const PISTON_TEMPLATES=[{name:'AB2',p0:2,q0:1,r0:2,m:1,n:2},{name:'AB3',p0:1,q0:1,r0:1,m:1,n:3}];
+const ALL_FORMULAS=[{label:'AB',m:1,n:1},{label:'AB2',m:1,n:2},{label:'AB3',m:1,n:3},{label:'A2B',m:2,n:1},{label:'A3B',m:3,n:1}];
+function formulaText(m,n){return 'A'+(m>1?m:'')+'B'+(n>1?n:'');}
 
-  const beforeAB = p;
-  const beforeB2 = q + extraB2;
-  const afterX = r;
-  const afterB2 = extraB2;
-
-  const beforeTotal = beforeAB + beforeB2;
-  const afterTotal = afterX + afterB2;
-
-  return {
-    template:t, k, p, q, r,
-    beforeAB, beforeB2, afterX, afterB2,
-    beforeTotal, afterTotal,
-    m:t.m, n:t.n
-  };
-}
-
-// ---------- SVG rendering ----------
-const FRAME_H = 240;
-const WALL_TOP = 8;
-const WALL_BOTTOM = 224;
-const WALL_LEFT = 14;
-const WALL_RIGHT = 176;
-const UNIT_PX = 22;
-const MIN_GAS = 46;
-const MAX_GAS = WALL_BOTTOM - WALL_TOP - 12;
-
-function gasHeightFor(totalMol){
-  return Math.max(MIN_GAS, Math.min(MAX_GAS, totalMol*UNIT_PX));
-}
-
-function placePositions(count, xmin, xmax, ymin, ymax, minDist){
-  const pts = [];
+const FRAME_H=240, WALL_TOP=8, WALL_BOTTOM=224, WALL_LEFT=14, WALL_RIGHT=176, UNIT_PX=22, MIN_GAS=46;
+const MAX_GAS = WALL_BOTTOM-WALL_TOP-12;
+function gasHeightFor(total){return Math.max(MIN_GAS,Math.min(MAX_GAS,total*UNIT_PX));}
+function placePositions(count,xmin,xmax,ymin,ymax,minDist){
+  const pts=[];
   for(let i=0;i<count;i++){
-    let best=null, bestScore=-1;
-    for(let tries=0; tries<40; tries++){
-      const x = xmin + Math.random()*(xmax-xmin);
-      const y = ymin + Math.random()*(ymax-ymin);
-      let minD = Infinity;
-      for(const p of pts){
-        const d = Math.hypot(p.x-x, p.y-y);
-        if(d<minD) minD=d;
-      }
+    let best=null,bestScore=-1;
+    for(let t=0;t<40;t++){
+      const x=xmin+Math.random()*(xmax-xmin), y=ymin+Math.random()*(ymax-ymin);
+      let minD=Infinity;
+      for(const p of pts){const d=Math.hypot(p.x-x,p.y-y); if(d<minD)minD=d;}
       if(pts.length===0){best={x,y};break;}
-      if(minD >= minDist){best={x,y};break;}
-      if(minD > bestScore){bestScore=minD; best={x,y};}
+      if(minD>=minDist){best={x,y};break;}
+      if(minD>bestScore){bestScore=minD;best={x,y};}
     }
     pts.push(best);
   }
   return pts;
 }
-
 function abMoleculeSvg(cx,cy,angle){
-  const dx = 9*Math.cos(angle), dy = 9*Math.sin(angle);
-  const ax = cx-dx, ay = cy-dy, bx = cx+dx, by = cy+dy;
-  return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/>
-    <circle cx="${ax}" cy="${ay}" r="8" fill="${BLUE}"/>
-    <circle cx="${bx}" cy="${by}" r="8" fill="${RED}"/>`;
+  const dx=9*Math.cos(angle),dy=9*Math.sin(angle);
+  const ax=cx-dx,ay=cy-dy,bx=cx+dx,by=cy+dy;
+  return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/><circle cx="${ax}" cy="${ay}" r="8" fill="${BLUE}"/><circle cx="${bx}" cy="${by}" r="8" fill="${RED}"/>`;
 }
 function b2MoleculeSvg(cx,cy,angle){
-  const dx = 8.5*Math.cos(angle), dy = 8.5*Math.sin(angle);
-  const ax = cx-dx, ay = cy-dy, bx = cx+dx, by = cy+dy;
-  return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/>
-    <circle cx="${ax}" cy="${ay}" r="8" fill="${RED}"/>
-    <circle cx="${bx}" cy="${by}" r="8" fill="${RED}"/>`;
+  const dx=8.5*Math.cos(angle),dy=8.5*Math.sin(angle);
+  const ax=cx-dx,ay=cy-dy,bx=cx+dx,by=cy+dy;
+  return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/><circle cx="${ax}" cy="${ay}" r="8" fill="${RED}"/><circle cx="${bx}" cy="${by}" r="8" fill="${RED}"/>`;
 }
 function xMoleculeSvg(cx,cy,n,angle){
-  let s = `<circle cx="${cx}" cy="${cy}" r="9" fill="${BLUE}"/>`;
-  const dist = 15;
+  let s=`<circle cx="${cx}" cy="${cy}" r="9" fill="${BLUE}"/>`;
+  const dist=15;
   for(let i=0;i<n;i++){
-    const a = angle + (i/n)*Math.PI*2;
-    const bx = cx + dist*Math.cos(a), by = cy + dist*Math.sin(a);
-    s += `<line x1="${cx}" y1="${cy}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/>
-      <circle cx="${bx}" cy="${by}" r="7.5" fill="${RED}"/>`;
+    const a=angle+(i/n)*Math.PI*2;
+    const bx=cx+dist*Math.cos(a), by=cy+dist*Math.sin(a);
+    s+=`<line x1="${cx}" y1="${cy}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/><circle cx="${bx}" cy="${by}" r="7.5" fill="${RED}"/>`;
   }
   return s;
 }
-
-function renderVessel(svgEl, molecules, totalMol){
-  const gasH = gasHeightFor(totalMol);
-  const pistonY = WALL_BOTTOM - gasH;
-  const innerLeft = WALL_LEFT+6, innerRight = WALL_RIGHT-6;
-
-  const positions = placePositions(molecules.length, innerLeft+8, innerRight-8, pistonY+16, WALL_BOTTOM-12, 34);
-
-  let inner = '';
-  molecules.forEach((mol, i) => {
-    const pos = positions[i];
-    const angle = Math.random()*Math.PI*2;
-    if(mol.type==='AB') inner += abMoleculeSvg(pos.x,pos.y,angle);
-    else if(mol.type==='B2') inner += b2MoleculeSvg(pos.x,pos.y,angle);
-    else if(mol.type==='X') inner += xMoleculeSvg(pos.x,pos.y,mol.n,angle);
+function buildVesselSVG(molecules,totalMol){
+  const gasH=gasHeightFor(totalMol), pistonY=WALL_BOTTOM-gasH;
+  const innerLeft=WALL_LEFT+6, innerRight=WALL_RIGHT-6;
+  const positions=placePositions(molecules.length, innerLeft+8, innerRight-8, pistonY+16, WALL_BOTTOM-12, 34);
+  let inner='';
+  molecules.forEach((mol,i)=>{
+    const pos=positions[i], angle=Math.random()*Math.PI*2;
+    if(mol.type==='AB') inner+=abMoleculeSvg(pos.x,pos.y,angle);
+    else if(mol.type==='B2') inner+=b2MoleculeSvg(pos.x,pos.y,angle);
+    else if(mol.type==='X') inner+=xMoleculeSvg(pos.x,pos.y,mol.n,angle);
   });
-
-  svgEl.innerHTML = `
-    <rect x="${WALL_LEFT}" y="${WALL_TOP}" width="${WALL_RIGHT-WALL_LEFT}" height="${WALL_BOTTOM-WALL_TOP}"
-      fill="#F7F9F6" stroke="${WALL}" stroke-width="3" stroke-linecap="square"/>
+  return `<svg class="vessel" viewBox="0 0 190 240">
+    <rect x="${WALL_LEFT}" y="${WALL_TOP}" width="${WALL_RIGHT-WALL_LEFT}" height="${WALL_BOTTOM-WALL_TOP}" fill="#F7F9F6" stroke="${WALL}" stroke-width="3"/>
     <rect x="${WALL_LEFT-2}" y="${pistonY-5}" width="${WALL_RIGHT-WALL_LEFT+4}" height="8" fill="${WALL}"/>
     <rect x="${(WALL_LEFT+WALL_RIGHT)/2-6}" y="${WALL_TOP-4}" width="12" height="${pistonY-WALL_TOP-1}" fill="${WALL}" opacity="0.85"/>
-    <g>${inner}</g>
-  `;
+    <g>${inner}</g></svg>`;
+}
+function genPiston(){
+  const t=choice(PISTON_TEMPLATES), k=randInt(1,2);
+  const p=t.p0*k, q=t.q0*k, r=t.r0*k;
+  const extraB2 = Math.random()<0.65 ? randInt(0,2) : 0;
+  const beforeAB=p, beforeB2=q+extraB2, afterX=r, afterB2=extraB2;
+  const beforeTotal=beforeAB+beforeB2, afterTotal=afterX+afterB2;
+  const beforeMols=[]; for(let i=0;i<beforeAB;i++) beforeMols.push({type:'AB'}); for(let i=0;i<beforeB2;i++) beforeMols.push({type:'B2'});
+  const afterMols=[]; for(let i=0;i<afterX;i++) afterMols.push({type:'X',n:t.n}); for(let i=0;i<afterB2;i++) afterMols.push({type:'B2'});
+  const beforeSvg=buildVesselSVG(shuffle(beforeMols),beforeTotal);
+  const afterSvg=buildVesselSVG(shuffle(afterMols),afterTotal);
+  const eqLine=`${p}AB(g) + ${q}B\u2082(g) \u2192 ${r}X(g)`+(beforeB2>q?`  (B\u2082 ${beforeB2-q}\uBAB0 \uBBF8\uBC18\uC751)`:'');
+  const correctLabel=formulaText(t.m,t.n);
+  const opts=shuffle(ALL_FORMULAS);
+  const choices=opts.map(o=>({html:subscript(o.label), value:o.label}));
+  const aCount=p, bCount=p+q*2;
+  const explanation=`
+    <div>반응 전 A 원자 수 = ${p}, B 원자 수 = ${p} + ${q}\u00d72 = ${bCount}</div>
+    <div>원자의 종류와 개수는 반응 후에도 보존되므로, X ${r}분자에 A 원자 ${aCount}개, B 원자 ${bCount}개가 들어 있어야 합니다.</div>
+    <div>X 1분자당 A ${(aCount/r).toFixed(0)}개, B ${(bCount/r).toFixed(0)}개 \u2192 X의 화학식은 <b>${subscript(correctLabel)}</b></div>
+    <div>반응 전 전체 분자 수 ${beforeTotal} : 반응 후 전체 분자 수 ${afterTotal} \u2192 일정 온도·압력에서 부피비도 ${beforeTotal}:${afterTotal}</div>`;
+  const promptHTML=`
+    <span class="typeTag">피스톤 몰비 모형</span>
+    <p class="prompt">그림은 AB(g)와 B\u2082(g)가 반응하여 X(g)를 생성하는 반응을 모형으로 나타낸 것이다. X의 모형은 나타내지 않았다.
+    <span class="eq">${eqLine}</span></p>
+    <div class="stage">
+      <div class="containerBlock"><div class="label">반응 전</div>${beforeSvg}</div>
+      <div class="arrow">\u2192</div>
+      <div class="containerBlock"><div class="label">반응 후</div>${afterSvg}</div>
+    </div>
+    <div class="legend"><span><i class="dot dotA"></i>A</span><span><i class="dot dotB"></i>B</span></div>
+    <p class="question">X의 화학식으로 가장 적절한 것은? (A, B는 임의의 원소 기호)</p>`;
+  return {promptHTML, choices, correct: correctLabel, explanation};
 }
 
-function drawProblem(p){
-  const beforeMols = [];
-  for(let i=0;i<p.beforeAB;i++) beforeMols.push({type:'AB'});
-  for(let i=0;i<p.beforeB2;i++) beforeMols.push({type:'B2'});
-  const afterMols = [];
-  for(let i=0;i<p.afterX;i++) afterMols.push({type:'X', n:p.n});
-  for(let i=0;i<p.afterB2;i++) afterMols.push({type:'B2'});
-
-  renderVessel(document.getElementById('beforeSvg'), shuffle(beforeMols), p.beforeTotal);
-  renderVessel(document.getElementById('afterSvg'), shuffle(afterMols), p.afterTotal);
-
-  document.getElementById('eqLine').textContent =
-    `${p.p}AB(g) + ${p.q}B₂(g) → ${p.r}X(g)` + (p.beforeB2>p.q ? `  (B₂ ${p.beforeB2-p.q}몰 반응하지 않고 남음)` : '');
-}
-
-function shuffle(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-// ---------- Choices / answer logic ----------
-const ALL_FORMULAS = [
-  {label:'AB', m:1, n:1},
-  {label:'AB2', m:1, n:2},
-  {label:'AB3', m:1, n:3},
-  {label:'A2B', m:2, n:1},
-  {label:'A3B', m:3, n:1},
+// ============================================================
+// TYPE 2: coefficient-sum ratio
+// ============================================================
+const REACTION_BANK=[
+  {eq:'C\u2083H\u2088 + 5O\u2082 \u2192 3CO\u2082 + 4H\u2082O', reactants:[1,5], products:[3,4]},
+  {eq:'CH\u2084 + 2O\u2082 \u2192 CO\u2082 + 2H\u2082O', reactants:[1,2], products:[1,2]},
+  {eq:'2C\u2082H\u2086 + 7O\u2082 \u2192 4CO\u2082 + 6H\u2082O', reactants:[2,7], products:[4,6]},
+  {eq:'N\u2082 + 3H\u2082 \u2192 2NH\u2083', reactants:[1,3], products:[2]},
+  {eq:'2KClO\u2083 \u2192 2KCl + 3O\u2082', reactants:[2], products:[2,3]},
+  {eq:'4NH\u2083 + 5O\u2082 \u2192 4NO + 6H\u2082O', reactants:[4,5], products:[4,6]},
+  {eq:'2Mg + O\u2082 \u2192 2MgO', reactants:[2,1], products:[2]},
+  {eq:'N\u2082 + 2O\u2082 \u2192 2NO\u2082', reactants:[1,2], products:[2]},
+  {eq:'4Al + 3O\u2082 \u2192 2Al\u2082O\u2083', reactants:[4,3], products:[2]},
+  {eq:'2C\u2084H\u2081\u2080 + 13O\u2082 \u2192 8CO\u2082 + 10H\u2082O', reactants:[2,13], products:[8,10]},
 ];
+function ratioLabel(a,b){const g=gcd(a,b); return `${a/g} : ${b/g}`;}
+function genCoef(){
+  const r=choice(REACTION_BANK);
+  const rs=r.reactants.reduce((a,b)=>a+b,0), ps=r.products.reduce((a,b)=>a+b,0);
+  const correct=ratioLabel(rs,ps);
+  const opts=new Set([correct]);
+  while(opts.size<5){
+    const da=Math.max(1, rs+randInt(-2,2)), db=Math.max(1, ps+randInt(-2,2));
+    opts.add(ratioLabel(da,db));
+  }
+  const choices=shuffle([...opts]).map(v=>({html:v, value:v}));
+  const explanation=`
+    <div>반응식: ${r.eq}</div>
+    <div>반응물 계수의 합 = ${r.reactants.join(' + ')} = ${rs}</div>
+    <div>생성물 계수의 합 = ${r.products.join(' + ')} = ${ps}</div>
+    <div>따라서 반응물 계수의 합 : 생성물 계수의 합 = ${rs} : ${ps} = <b>${correct}</b></div>`;
+  const promptHTML=`
+    <span class="typeTag">반응식 계수비</span>
+    <p class="prompt">다음은 어떤 반응의 화학 반응식이다.<span class="eq">${r.eq}</span></p>
+    <p class="question">이 반응에서 (반응물 계수의 합) : (생성물 계수의 합)은?</p>`;
+  return {promptHTML, choices, correct, explanation};
+}
 
-function renderChoices(p){
-  const correctLabel = formulaText(p.m, p.n);
-  const choicesEl = document.getElementById('choices');
-  choicesEl.innerHTML = '';
-  const opts = shuffle(ALL_FORMULAS);
-  opts.forEach(o => {
-    const btn = document.createElement('button');
-    btn.className = 'choice';
-    btn.innerHTML = subscript(o.label);
-    btn.dataset.label = o.label;
-    btn.onclick = () => selectAnswer(btn, o.label, correctLabel);
+// ============================================================
+// TYPE 3: mol-decrease true/false selection
+// ============================================================
+const MOL_REACTIONS=[
+  {label:'H\u2082(g) + Cl\u2082(g) \u2192 2HCl(g)', before:2, after:2},
+  {label:'N\u2082(g) + 3H\u2082(g) \u2192 2NH\u2083(g)', before:4, after:2},
+  {label:'2H\u2082O(l) \u2192 2H\u2082(g) + O\u2082(g)', before:0, after:3},
+  {label:'N\u2082(g) + 2O\u2082(g) \u2192 2NO\u2082(g)', before:3, after:2},
+  {label:'2SO\u2082(g) + O\u2082(g) \u2192 2SO\u2083(g)', before:3, after:2},
+  {label:'CaCO\u2083(s) \u2192 CaO(s) + CO\u2082(g)', before:0, after:1},
+  {label:'2NH\u2083(g) \u2192 N\u2082(g) + 3H\u2082(g)', before:2, after:4},
+  {label:'2H\u2082(g) + O\u2082(g) \u2192 2H\u2082O(g)', before:3, after:2},
+];
+const HANGUL=['\u3131','\u3134','\u3137']; // ㄱ ㄴ ㄷ
+function comboLabel(idxArr){ if(idxArr.length===0) return '없음'; return idxArr.map(i=>HANGUL[i]).join(', '); }
+function genDecrease(){
+  const picked = shuffle([...Array(MOL_REACTIONS.length).keys()]).slice(0,3);
+  const items = picked.map(i=>MOL_REACTIONS[i]);
+  const correctIdx = [0,1,2].filter(i=>items[i].after<items[i].before);
+  const correctKey = correctIdx.join(',');
+  // build all non-empty + empty subsets of {0,1,2}
+  const subsets=[[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]];
+  const correctLabel = comboLabel(correctIdx);
+  let pool = subsets.map(s=>comboLabel(s));
+  pool = uniq(pool);
+  const others = shuffle(pool.filter(l=>l!==correctLabel)).slice(0,4);
+  const choices = shuffle([correctLabel, ...others]).map(v=>({html:v, value:v}));
+  const stmtHTML = items.map((it,i)=>`<div class="stmt"><b>${HANGUL[i]}.</b> ${it.label}</div>`).join('');
+  const explanation = items.map((it,i)=>{
+    const dec = it.after<it.before;
+    return `<div>${HANGUL[i]}. ${it.label} \u2192 기체 몰 ${it.before} \u2192 ${it.after} (${dec?'감소':'감소 아님'})</div>`;
+  }).join('') + `<div>정답: <b>${correctLabel}</b></div>`;
+  const promptHTML=`
+    <span class="typeTag">몰 변화 판별</span>
+    <p class="prompt">다음은 3가지 반응이다.</p>
+    ${stmtHTML}
+    <p class="question">반응 후 기체의 총 양(mol)이 반응 전보다 감소하는 것을 있는 대로 고른 것은?</p>`;
+  return {promptHTML, choices, correct: correctLabel, explanation};
+}
+
+// ============================================================
+// TYPE 4: limiting reactant container
+// ============================================================
+const LIMIT_TEMPLATES=[
+  {a:3,b:1,c:2, eq:'3A(g) + B(g) \u2192 2C(g)'},
+  {a:2,b:1,c:2, eq:'2A(g) + B(g) \u2192 2C(g)'},
+  {a:1,b:1,c:2, eq:'A(g) + B(g) \u2192 2C(g)'},
+  {a:2,b:3,c:1, eq:'2A(g) + 3B(g) \u2192 C(g)'},
+  {a:1,b:2,c:1, eq:'A(g) + 2B(g) \u2192 C(g)'},
+];
+function genLimiting(){
+  const t=choice(LIMIT_TEMPLATES);
+  let p=randInt(1,4), q=randInt(1,4);
+  const A0=t.a*p, B0=t.b*q;
+  const extent=Math.min(p,q);
+  const reactedA=t.a*extent, reactedB=t.b*extent, producedC=t.c*extent;
+  const leftoverA=A0-reactedA, leftoverB=B0-reactedB;
+  const beforeTotal=A0+B0, afterTotal=leftoverA+leftoverB+producedC;
+
+  let askType = choice(['product','leftover','total']);
+  if(askType==='leftover' && leftoverA===0 && leftoverB===0) askType='product';
+
+  let questionText, correctVal;
+  if(askType==='product'){
+    questionText='반응 후 생성된 C(g)의 양(mol)은?';
+    correctVal=producedC;
+  } else if(askType==='leftover'){
+    const excessName = leftoverA>0 ? 'A' : 'B';
+    const excessVal = leftoverA>0 ? leftoverA : leftoverB;
+    questionText=`반응 후 남아 있는 ${excessName}(g)의 양(mol)은?`;
+    correctVal=excessVal;
+  } else {
+    questionText='반응 전 전체 기체 양(mol)과 반응 후 전체 기체 양(mol)의 차이는?';
+    correctVal=Math.abs(beforeTotal-afterTotal);
+  }
+  const optSet=new Set([correctVal]);
+  while(optSet.size<5){
+    const d=correctVal+choice([-2,-1,1,2,3]);
+    if(d>=0) optSet.add(d);
+  }
+  const choices=shuffle([...optSet]).map(v=>({html:`${v} mol`, value:String(v)}));
+
+  const limitName = p<=q ? 'A' : (q<p ? 'B' : 'A, B 동시');
+  const explanation=`
+    <div>반응식: ${t.eq}</div>
+    <div>A(g) ${A0}mol \u2192 ${t.a}mol씩 ${p}세트 분, B(g) ${B0}mol \u2192 ${t.b}mol씩 ${q}세트 분</div>
+    <div>세트 수가 더 적은 쪽(${extent}세트)까지만 반응 진행 \u2192 한계는 ${limitName}</div>
+    <div>반응한 A = ${reactedA}mol, 반응한 B = ${reactedB}mol, 생성된 C = ${producedC}mol</div>
+    <div>남은 A = ${leftoverA}mol, 남은 B = ${leftoverB}mol</div>
+    <div>반응 전 전체 = ${beforeTotal}mol, 반응 후 전체 = ${afterTotal}mol</div>
+    <div>정답: <b>${correctVal} mol</b></div>`;
+  const promptHTML=`
+    <span class="typeTag">한정 반응물</span>
+    <p class="prompt">다음은 A(g)와 B(g)가 반응하여 C(g)를 생성하는 반응의 화학 반응식이다.<span class="eq">${t.eq}</span></p>
+    <p class="prompt">그림은 용기에 A(g) ${A0}mol과 B(g) ${B0}mol을 넣어 어느 한 기체가 모두 소모될 때까지 반응시키는 과정을 나타낸 것이다.</p>
+    <div class="boxrow">
+      <div class="box"><div class="t">반응 전</div>A(g) ${A0} mol<br>B(g) ${B0} mol</div>
+      <div class="arrow">\u2192</div>
+      <div class="box"><div class="t">반응 후</div>?</div>
+    </div>
+    <p class="question">${questionText}</p>`;
+  return {promptHTML, choices, correct:String(correctVal), explanation};
+}
+
+// ============================================================
+// controller
+// ============================================================
+const GENERATORS={piston:genPiston, coef:genCoef, decrease:genDecrease, limiting:genLimiting};
+const TYPE_NAMES={piston:'피스톤 몰비 모형', coef:'반응식 계수비', decrease:'몰 변화 판별', limiting:'한정 반응물'};
+const TYPE_KEYS=Object.keys(GENERATORS);
+
+const state={
+  setsCompleted:0, totalCorrect:0, totalCount:0,
+  wrongByType:{piston:0,coef:0,decrease:0,limiting:0},
+  mode:'normal', roundLength:10, roundIndex:0, roundCorrect:0,
+  weakType:null, currentQ:null, answered:false,
+};
+
+function updateStatusBar(){
+  const label = state.mode==='weak'
+    ? `약점 클리닉(${TYPE_NAMES[state.weakType]}) · ${state.roundIndex+1}/${state.roundLength}`
+    : `세트 ${state.setsCompleted+1} · ${state.roundIndex+1}/${state.roundLength}`;
+  document.getElementById('roundLabel').textContent = label;
+  document.getElementById('cumStat').textContent = `${state.totalCorrect}/${state.totalCount}`;
+}
+
+function pickType(){ return state.mode==='weak' ? state.weakType : choice(TYPE_KEYS); }
+
+function startNormalSet(){ state.mode='normal'; state.roundLength=10; state.roundIndex=0; state.roundCorrect=0; nextQuestion(); }
+function startWeakRound(type){ state.mode='weak'; state.weakType=type; state.roundLength=5; state.roundIndex=0; state.roundCorrect=0; nextQuestion(); }
+
+function nextQuestion(){
+  if(state.roundIndex>=state.roundLength){ showRoundResult(); return; }
+  const type=pickType();
+  const q=GENERATORS[type]();
+  q.type=type;
+  state.currentQ=q; state.answered=false;
+  renderQuestionUI();
+}
+
+function renderQuestionUI(){
+  updateStatusBar();
+  const q=state.currentQ;
+  const card=document.getElementById('card');
+  card.innerHTML = `
+    ${q.promptHTML}
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback">
+      <div class="verdict" id="verdict"></div>
+      <div class="expl" id="expl"></div>
+    </div>
+    <div class="actions"><button class="next" id="nextBtn">다음 문제</button></div>`;
+  const choicesEl=document.getElementById('choices');
+  q.choices.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='choice';
+    btn.innerHTML=c.html;
+    btn.dataset.value=c.value;
+    btn.onclick=()=>selectAnswer(btn,c.value);
     choicesEl.appendChild(btn);
   });
-}
-function subscript(label){
-  return label.replace(/(\d+)/g, '<sub>$1</sub>');
+  document.getElementById('nextBtn').onclick=()=>{ state.roundIndex++; nextQuestion(); };
 }
 
-function selectAnswer(btn, chosen, correctLabel){
-  if(answered) return;
-  answered = true;
-  score.total++;
-  const isCorrect = chosen === correctLabel;
-  if(isCorrect) score.correct++;
-  document.getElementById('scoreCorrect').textContent = score.correct;
-  document.getElementById('scoreTotal').textContent = score.total;
+function selectAnswer(btn,chosenValue){
+  if(state.answered) return;
+  state.answered=true;
+  const q=state.currentQ;
+  const isCorrect = chosenValue===q.correct;
+  state.totalCount++;
+  if(isCorrect){ state.totalCorrect++; state.roundCorrect++; }
+  else { state.wrongByType[q.type]++; }
+  updateStatusBar();
 
-  document.querySelectorAll('.choice').forEach(b => {
-    b.disabled = true;
-    if(b.dataset.label === correctLabel) b.classList.add('correct');
-    else if(b === btn) b.classList.add('wrong');
+  document.querySelectorAll('.choice').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.value===q.correct) b.classList.add('correct');
+    else if(b===btn) b.classList.add('wrong');
   });
 
-  showFeedback(isCorrect, current);
+  const fb=document.getElementById('feedback');
+  fb.className='feedback show '+(isCorrect?'ok':'no');
+  document.getElementById('verdict').className='verdict '+(isCorrect?'ok':'no');
+  document.getElementById('verdict').textContent = isCorrect ? '정답입니다.' : '오답입니다.';
+  document.getElementById('expl').innerHTML = q.explanation;
   document.getElementById('nextBtn').classList.add('show');
 }
 
-function showFeedback(isCorrect, p){
-  const fb = document.getElementById('feedback');
-  const verdict = document.getElementById('verdict');
-  const expl = document.getElementById('expl');
-  fb.className = 'feedback show ' + (isCorrect ? 'ok':'no');
-  verdict.className = 'verdict ' + (isCorrect ? 'ok':'no');
-  verdict.textContent = isCorrect ? '정답입니다.' : '오답입니다.';
+function weakestType(){
+  let best=null,bestVal=-1;
+  TYPE_KEYS.forEach(k=>{ if(state.wrongByType[k]>bestVal){bestVal=state.wrongByType[k]; best=k;} });
+  if(bestVal<=0) return choice(TYPE_KEYS);
+  return best;
+}
+function resetWrongCounts(){ TYPE_KEYS.forEach(k=>state.wrongByType[k]=0); }
 
-  const aCount = p.p;
-  const bCount = p.p + p.q*2;
-  expl.innerHTML = `
-    <div>반응 전 A 원자 수 = ${p.p}, B 원자 수 = ${p.p} + ${p.q}×2 = ${bCount}</div>
-    <div>원자의 종류와 개수는 반응 후에도 그대로 보존되므로, X ${p.r}분자에 A 원자 ${aCount}개, B 원자 ${bCount}개가 들어 있어야 합니다.</div>
-    <div>X 1분자당 A 원자 ${(aCount/p.r).toFixed(0)}개, B 원자 ${(bCount/p.r).toFixed(0)}개 → X의 화학식은 <b>${subscript(formulaText(p.m,p.n))}</b></div>
-    <div>반응 전 전체 분자 수 ${p.beforeTotal} : 반응 후 전체 분자 수 ${p.afterTotal} 이므로, 일정한 온도·압력에서 부피비도 ${p.beforeTotal} : ${p.afterTotal} 입니다.</div>
-  `;
+function showRoundResult(){
+  const card=document.getElementById('card');
+  if(state.mode==='normal'){
+    state.setsCompleted++;
+    const isMilestone = state.setsCompleted%3===0;
+    const nextLabel = isMilestone ? '약점 클리닉 5문제 풀기' : '다음 세트 시작';
+    let weak=null;
+    if(isMilestone){ weak=weakestType(); }
+    card.innerHTML=`
+      <div class="resultWrap">
+        <div class="lbl">세트 ${state.setsCompleted} 결과</div>
+        <div class="big">${state.roundCorrect} / ${state.roundLength}</div>
+        <div class="lbl">정답</div>
+        ${isMilestone ? `<div class="badge">3세트 완료! 가장 많이 틀린 유형 &ldquo;${TYPE_NAMES[weak]}&rdquo;만 모아 5문제를 더 풀어봐요.</div>` : ''}
+        <div class="breakdown">
+          ${TYPE_KEYS.map(k=>`<div class="row"><span>${TYPE_NAMES[k]} 오답 수</span><b>${state.wrongByType[k]}</b></div>`).join('')}
+        </div>
+      </div>
+      <div class="actions"><button class="next show" id="nextBtn">${nextLabel}</button></div>`;
+    document.getElementById('nextBtn').onclick=()=>{
+      if(isMilestone){ const w=weak; resetWrongCounts(); startWeakRound(w); }
+      else { startNormalSet(); }
+    };
+  } else {
+    card.innerHTML=`
+      <div class="resultWrap">
+        <div class="lbl">약점 클리닉 결과 · ${TYPE_NAMES[state.weakType]}</div>
+        <div class="big">${state.roundCorrect} / ${state.roundLength}</div>
+        <div class="lbl">정답</div>
+      </div>
+      <div class="actions"><button class="next show" id="nextBtn">다음 세트 계속하기</button></div>`;
+    document.getElementById('nextBtn').onclick=()=>startNormalSet();
+  }
+  updateStatusBar();
 }
 
-function nextProblem(){
-  answered = false;
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('nextBtn').classList.remove('show');
-  current = genProblem();
-  drawProblem(current);
-  renderChoices(current);
-}
-
-document.getElementById('nextBtn').onclick = nextProblem;
-
-nextProblem();
+startNormalSet();
 </script>
 </body>
 </html>
