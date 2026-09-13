@@ -333,7 +333,7 @@ function renderChoices(p){
   opts.forEach(o => {
     const btn = document.createElement('button');
     btn.className = 'choice';
-    btn.textContent = subscript(o.label);
+    btn.innerHTML = subscript(o.label);
     btn.dataset.label = o.label;
     btn.onclick = () => selectAnswer(btn, o.label, correctLabel);
     choicesEl.appendChild(btn);
