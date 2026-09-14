@@ -2,3101 +2,695 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0,
-               maximum-scale=1.0, user-scalable=no,
-               viewport-fit=cover">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>화학 반응식 트레이너</title>
-
 <style>
-:root{
-  --paper:#EEF2ED;
-  --paper2:#E4EAE3;
-  --ink:#1B2A23;
-  --inkfade:#5B6B61;
-  --blue:#2A5C8A;
-  --red:#B4483F;
-  --line:#C7D0C8;
-  --good:#3F7D5C;
-  --bad:#A23B3B;
-  --accent:#C98A2B;
-  --wall:#8B958E;
-}
-
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,body{
-  margin:0;
-  padding:0;
-  width:100%;
-  min-height:100%;
-}
-
-body{
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Pretendard,
-    sans-serif;
-
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 27px,
-      rgba(120,140,125,0.08) 28px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 27px,
-      rgba(120,140,125,0.08) 28px
-    ),
-    var(--paper);
-
-  color:var(--ink);
-  min-height:100vh;
-  padding:18px 12px 40px;
-
-  /* 아이패드에서 꾹 누르기 선택 방지 */
-  -webkit-user-select:none;
-  user-select:none;
-  -webkit-touch-callout:none;
-}
-
-.wrap{
-  max-width:900px;
-  margin:0 auto;
-}
-
-.layout{
-  display:flex;
-  gap:16px;
-  align-items:flex-start;
-  flex-wrap:wrap;
-  margin-top:14px;
-}
-
-.layout .card{
-  flex:1 1 340px;
-  margin-top:0;
-}
-
-.layout .notewrap{
-  flex:1 1 280px;
-  margin-top:0;
-  position:sticky;
-  top:10px;
-}
-
-@media(max-width:680px){
-  .layout{
-    flex-direction:column;
+  :root{
+    --paper:#EEF2ED; --paper2:#E4EAE3; --ink:#1B2A23; --inkfade:#5B6B61;
+    --blue:#2A5C8A; --red:#B4483F; --line:#C7D0C8;
+    --good:#3F7D5C; --bad:#A23B3B; --accent:#C98A2B; --wall:#8B958E;
   }
-
-  .layout .notewrap{
-    position:static;
-    width:100%;
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Pretendard,sans-serif;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(120,140,125,0.08) 28px),
+      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(120,140,125,0.08) 28px),
+      var(--paper);
+    color:var(--ink); min-height:100vh; padding:18px 12px 40px;
   }
-}
-
-h1{
-  font-family:Georgia,"Iowan Old Style",serif;
-  font-size:24px;
-  font-weight:600;
-  margin:0 0 4px;
-}
-
-.sub{
-  color:var(--inkfade);
-  font-size:13.5px;
-  margin:0;
-  line-height:1.5;
-}
-
-.statusbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:baseline;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:14px;
-  padding-top:10px;
-  border-top:1px solid var(--line);
-  font-size:12.5px;
-  color:var(--inkfade);
-}
-
-.statusbar b{
-  color:var(--ink);
-  font-size:14px;
-}
-
-.card{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:4px;
-  padding:20px 18px 22px;
-  margin-top:14px;
-}
-
-.prompt{
-  font-size:15px;
-  line-height:1.65;
-  margin:0 0 14px;
-}
-
-.prompt .eq{
-  display:block;
-  margin-top:8px;
-  font-family:Georgia,serif;
-  font-size:16px;
-  color:var(--blue);
-}
-
-.stmt{
-  margin:4px 0;
-  padding-left:2px;
-}
-
-.stmt b{
-  color:var(--blue);
-  margin-right:4px;
-}
-
-.stage{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  flex-wrap:wrap;
-  margin:14px 0 10px;
-}
-
-.containerBlock{
-  text-align:center;
-}
-
-.containerBlock .label{
-  font-size:12px;
-  color:var(--inkfade);
-  margin-bottom:4px;
-}
-
-svg.vessel{
-  width:140px;
-  max-width:36vw;
-  height:auto;
-  display:block;
-  margin:0 auto;
-}
-
-.arrow{
-  font-size:22px;
-  color:var(--wall);
-  padding:0 4px;
-}
-
-.legend{
-  display:flex;
-  gap:14px;
-  justify-content:center;
-  align-items:center;
-  font-size:12.5px;
-  color:var(--inkfade);
-  margin:8px 0 4px;
-}
-
-.legend span{
-  display:inline-flex;
-  align-items:center;
-  gap:5px;
-}
-
-.dot{
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  display:inline-block;
-}
-
-.dotA{background:var(--blue);}
-.dotB{background:var(--red);}
-
-.boxrow{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:14px;
-  margin:14px 0;
-  flex-wrap:wrap;
-}
-
-.box{
-  border:1.5px solid var(--wall);
-  border-radius:4px;
-  padding:12px 16px;
-  min-width:120px;
-  text-align:center;
-  font-size:14px;
-  background:var(--paper2);
-}
-
-.box .t{
-  font-size:11.5px;
-  color:var(--inkfade);
-  margin-bottom:6px;
-}
-
-.question{
-  font-size:15px;
-  font-weight:600;
-  margin:16px 0 12px;
-}
-
-.choices{
-  display:grid;
-  grid-template-columns:repeat(2,1fr);
-  gap:9px;
-}
-
-.choice{
-  border:1.5px solid var(--line);
-  background:var(--paper2);
-  border-radius:4px;
-  padding:11px 8px;
-  font-size:14.5px;
-  font-family:Georgia,serif;
-  text-align:center;
-  cursor:pointer;
-}
-
-.choice.correct{
-  background:#E4F0E9;
-  border-color:var(--good);
-  color:var(--good);
-}
-
-.choice.wrong{
-  background:#F5E6E4;
-  border-color:var(--bad);
-  color:var(--bad);
-}
-
-.feedback{
-  margin-top:16px;
-  padding:13px 14px;
-  border-radius:4px;
-  font-size:13.8px;
-  line-height:1.65;
-  display:none;
-}
-
-.feedback.show{
-  display:block;
-}
-
-.feedback.ok{
-  background:#E4F0E9;
-  border:1px solid var(--good);
-}
-
-.feedback.no{
-  background:#F5E6E4;
-  border:1px solid var(--bad);
-}
-
-.feedback .verdict{
-  font-weight:700;
-  margin-bottom:6px;
-}
-
-.feedback .verdict.ok{
-  color:var(--good);
-}
-
-.feedback .verdict.no{
-  color:var(--bad);
-}
-
-.expl div{
-  margin-bottom:3px;
-}
-
-.actions{
-  margin-top:18px;
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-}
-
-button.next{
-  background:var(--accent);
-  color:#fff;
-  border:none;
-  border-radius:5px;
-  padding:11px 20px;
-  font-size:14px;
-  font-weight:600;
-  cursor:pointer;
-  display:none;
-  touch-action:manipulation;
-}
-
-button.next.show{
-  display:inline-block;
-}
-
-button.next.prev{
-  background:#fff;
-  color:var(--ink);
-  border:1.5px solid var(--line);
-}
-
-button.next:hover{
-  opacity:.9;
-}
-
-.typeTag{
-  display:inline-block;
-  font-size:11px;
-  color:var(--inkfade);
-  border:1px solid var(--line);
-  border-radius:20px;
-  padding:2px 10px;
-  margin-bottom:10px;
-}
-
-.resultWrap{
-  text-align:center;
-  padding:20px 6px;
-}
-
-.resultWrap .big{
-  font-family:Georgia,serif;
-  font-size:42px;
-  color:var(--blue);
-  margin:6px 0 2px;
-}
-
-.resultWrap .lbl{
-  font-size:14px;
-  color:var(--inkfade);
-}
-
-.resultWrap .badge{
-  margin-top:14px;
-  font-size:13px;
-  color:var(--accent);
-  font-weight:600;
-}
-
-.breakdown{
-  margin-top:18px;
-  text-align:left;
-  font-size:13px;
-  border-top:1px solid var(--line);
-  padding-top:14px;
-}
-
-.breakdown .row{
-  display:flex;
-  justify-content:space-between;
-  padding:4px 0;
-  color:var(--inkfade);
-}
-
-.breakdown .row b{
-  color:var(--ink);
-}
-
-
-/* =====================================================
-   메모장
-===================================================== */
-
-.notewrap{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:6px;
-  margin-top:14px;
-  overflow:hidden;
-
-  /* 선택/롱프레스 방지 */
-  -webkit-user-select:none;
-  user-select:none;
-  -webkit-touch-callout:none;
-}
-
-.noteHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:8px;
-  padding:9px 10px;
-  border-bottom:1px solid var(--line);
-}
-
-.noteHeader .title{
-  font-size:12.5px;
-  color:var(--inkfade);
-  font-weight:600;
-  white-space:nowrap;
-}
-
-.noteToolbar{
-  display:flex;
-  align-items:center;
-  gap:7px;
-}
-
-.swatch{
-  width:21px;
-  height:21px;
-  min-width:21px;
-  border-radius:50%;
-  border:2px solid transparent;
-  cursor:pointer;
-  padding:0;
-  touch-action:manipulation;
-}
-
-.swatch.active{
-  border-color:var(--accent);
-  box-shadow:0 0 0 2px #fff inset;
-}
-
-.toolbtn{
-  border:1px solid var(--line);
-  background:var(--paper2);
-  border-radius:5px;
-  padding:5px 9px;
-  font-size:12px;
-  color:var(--ink);
-  cursor:pointer;
-  touch-action:manipulation;
-}
-
-.toolbtn.active{
-  background:var(--accent);
-  color:#fff;
-  border-color:var(--accent);
-}
-
-.toolbtn.clear{
-  color:var(--bad);
-  border-color:var(--bad);
-  background:#fff;
-}
-
-/*
-  중요:
-  canvas 자체에서 브라우저의 터치 제스처,
-  텍스트 선택,
-  길게 누르기 메뉴 등을 차단
-*/
-#noteCanvas{
-  display:block;
-  width:100%;
-  height:420px;
-
-  touch-action:none;
-
-  -webkit-user-select:none;
-  user-select:none;
-  -webkit-touch-callout:none;
-
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 25px,
-      rgba(120,140,125,0.15) 26px
-    ),
-    #FBFCFA;
-
-  cursor:crosshair;
-}
-
-/* 아이패드 세로 화면 */
-@media(max-width:680px){
-  #noteCanvas{
-    height:440px;
+  .wrap{max-width:900px;margin:0 auto;}
+  .layout{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;}
+  .layout .card{flex:1 1 340px;margin-top:0;}
+  .layout .notewrap{flex:1 1 280px;margin-top:0;position:sticky;top:10px;}
+  @media (max-width:680px){
+    .layout{flex-direction:column;}
+    .layout .notewrap{position:static;width:100%;}
   }
-
-  .noteHeader{
-    flex-wrap:wrap;
+  h1{font-family:Georgia,"Iowan Old Style",serif;font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
+  .sub{color:var(--inkfade);font-size:13.5px;margin:0;line-height:1.5;}
+  .statusbar{
+    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;
+    margin-top:14px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--inkfade);
   }
+  .statusbar b{color:var(--ink);font-size:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:20px 18px 22px;margin-top:14px;}
+  .prompt{font-size:15px;line-height:1.65;margin:0 0 14px;}
+  .prompt .eq{display:block;margin-top:8px;font-family:Georgia,serif;font-size:16px;color:var(--blue);}
+  .stmt{margin:4px 0;padding-left:2px;}
+  .stmt b{color:var(--blue);margin-right:4px;}
+  .stage{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:14px 0 10px;}
+  .containerBlock{text-align:center;}
+  .containerBlock .label{font-size:12px;color:var(--inkfade);margin-bottom:4px;}
+  svg.vessel{width:140px;max-width:36vw;height:auto;display:block;margin:0 auto;}
+  .arrow{font-size:22px;color:var(--wall);padding:0 4px;}
+  .legend{display:flex;gap:14px;justify-content:center;align-items:center;font-size:12.5px;color:var(--inkfade);margin:8px 0 4px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
+  .dotA{background:var(--blue);} .dotB{background:var(--red);}
+  .boxrow{display:flex;align-items:center;justify-content:center;gap:14px;margin:14px 0;flex-wrap:wrap;}
+  .box{border:1.5px solid var(--wall);border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;font-size:14px;background:var(--paper2);}
+  .box .t{font-size:11.5px;color:var(--inkfade);margin-bottom:6px;}
+  .question{font-size:15px;font-weight:600;margin:16px 0 12px;}
+  .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+  @media (max-width:400px){.choices{grid-template-columns:1fr 1fr;}}
+  .choice{border:1.5px solid var(--line);background:var(--paper2);border-radius:4px;padding:11px 8px;font-size:14.5px;font-family:Georgia,serif;text-align:center;cursor:pointer;transition:border-color .12s,background .12s;}
+  .choice:hover:not(:disabled){border-color:var(--blue);}
+  .choice:disabled{cursor:default;}
+  .choice.correct{background:#E4F0E9;border-color:var(--good);color:var(--good);}
+  .choice.wrong{background:#F5E6E4;border-color:var(--bad);color:var(--bad);}
+  .feedback{margin-top:16px;padding:13px 14px;border-radius:4px;font-size:13.8px;line-height:1.65;display:none;}
+  .feedback.show{display:block;}
+  .feedback.ok{background:#E4F0E9;border:1px solid var(--good);}
+  .feedback.no{background:#F5E6E4;border:1px solid var(--bad);}
+  .feedback .verdict{font-weight:700;margin-bottom:6px;}
+  .feedback .verdict.ok{color:var(--good);} .feedback .verdict.no{color:var(--bad);}
+  .expl div{margin-bottom:3px;}
+  .actions{margin-top:18px;display:flex;justify-content:flex-end;}
+  button.next{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;display:none;}
+  button.next.show{display:inline-block;}
+  button.next:hover{opacity:0.9;}
+  .typeTag{display:inline-block;font-size:11px;color:var(--inkfade);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin-bottom:10px;}
+  .resultWrap{text-align:center;padding:20px 6px;}
+  .resultWrap .big{font-family:Georgia,serif;font-size:42px;color:var(--blue);margin:6px 0 2px;}
+  .resultWrap .lbl{font-size:14px;color:var(--inkfade);}
+  .resultWrap .badge{margin-top:14px;font-size:13px;color:var(--accent);font-weight:600;}
+  .breakdown{margin-top:18px;text-align:left;font-size:13px;border-top:1px solid var(--line);padding-top:14px;}
+  .breakdown .row{display:flex;justify-content:space-between;padding:4px 0;color:var(--inkfade);}
+  .breakdown .row b{color:var(--ink);}
 
-  .noteHeader .title{
-    width:100%;
-  }
-
-  .noteToolbar{
-    width:100%;
-    justify-content:flex-end;
-  }
-}
-
-/* 아주 작은 화면 */
-@media(max-width:430px){
-  .noteToolbar{
-    gap:5px;
-  }
-
-  .toolbtn{
-    padding:5px 7px;
-  }
-
-  .swatch{
-    width:20px;
-    height:20px;
-  }
-}
+  .notewrap{background:#fff;border:1px solid var(--line);border-radius:4px;margin-top:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  .noteHeader{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line);}
+  .noteHeader .title{font-size:12.5px;color:var(--inkfade);font-weight:600;}
+  .noteToolbar{display:flex;align-items:center;gap:8px;}
+  .swatch{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
+  .swatch.active{border-color:var(--accent);box-shadow:0 0 0 2px #fff inset;}
+  .toolbtn{border:1px solid var(--line);background:var(--paper2);border-radius:4px;padding:5px 10px;font-size:12px;color:var(--ink);cursor:pointer;}
+  .toolbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .toolbtn.clear{color:var(--bad);border-color:var(--bad);background:#fff;}
+  #noteCanvas{display:block;width:100%;height:420px;touch-action:none;background:
+      repeating-linear-gradient(0deg, transparent, transparent 25px, rgba(120,140,125,0.15) 26px),
+      #FBFCFA;}
 </style>
 </head>
-
 <body>
-
 <div class="wrap">
-
-<header>
-  <h1>화학 반응식 트레이너</h1>
-
-  <p class="sub">
-    기체 반응 몰비, 계수비, 참/거짓 판별, 한정 반응물 문제를
-    10문제 세트로 연습합니다.
-  </p>
-
-  <div class="statusbar">
-    <span id="roundLabel">세트 1 · 1/10</span>
-    <span>
-      누적 정답
-      <b id="cumStat">0/0</b>
-    </span>
-  </div>
-</header>
-
-
-<div class="layout">
-
-<div class="card" id="card"></div>
-
-
-<!-- =====================================================
-     메모장
-===================================================== -->
-
-<div class="notewrap">
-
-  <div class="noteHeader">
-
-    <span class="title">
-      메모장 · Apple Pencil
-    </span>
-
-    <div class="noteToolbar">
-
-      <button
-        class="swatch active"
-        data-color="#1B2A23"
-        style="background:#1B2A23"
-        title="검정">
-      </button>
-
-      <button
-        class="swatch"
-        data-color="#B4483F"
-        style="background:#B4483F"
-        title="빨강">
-      </button>
-
-      <button
-        class="swatch"
-        data-color="#2A5C8A"
-        style="background:#2A5C8A"
-        title="파랑">
-      </button>
-
-      <button
-        class="toolbtn"
-        id="eraserBtn">
-        지우개
-      </button>
-
-      <button
-        class="toolbtn clear"
-        id="clearNoteBtn">
-        전체 지우기
-      </button>
-
+  <header>
+    <h1>화학 반응식 트레이너</h1>
+    <p class="sub">기체 반응 몰비, 계수비, 참/거짓 판별, 한정 반응물 문제를 10문제 세트로 연습합니다.</p>
+    <div class="statusbar">
+      <span id="roundLabel">난이도 선택 중</span>
+      <span>누적 정답 <b id="cumStat">0/0</b> · <a href="#" id="changeDiffLink" style="color:var(--accent);text-decoration:none;">난이도 변경</a></span>
     </div>
+  </header>
+  <div class="layout">
+    <div class="card" id="card"></div>
 
+    <div class="notewrap">
+      <div class="noteHeader">
+        <span class="title">메모장 (Apple Pencil로 필기)</span>
+        <div class="noteToolbar">
+          <button class="swatch active" data-color="#1B2A23" style="background:#1B2A23" title="검정"></button>
+          <button class="swatch" data-color="#B4483F" style="background:#B4483F" title="빨강"></button>
+          <button class="swatch" data-color="#2A5C8A" style="background:#2A5C8A" title="파랑"></button>
+          <button class="toolbtn" id="eraserBtn">지우개</button>
+          <button class="toolbtn clear" id="clearNoteBtn">전체 지우기</button>
+        </div>
+      </div>
+      <canvas id="noteCanvas"></canvas>
+    </div>
   </div>
-
-  <canvas id="noteCanvas"></canvas>
-
 </div>
-
-</div>
-</div>
-
 
 <script>
+const BLUE = '#2A5C8A', RED = '#B4483F', WALL = '#8B958E';
 
-/* =========================================================
-   기본 유틸
-========================================================= */
+// ---------- utils ----------
+function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function choice(arr){return arr[randInt(0,arr.length-1)];}
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);return b?gcd(b,a%b):(a||1);}
+function subscript(s){return s.replace(/(\d+)/g,'<sub>$1</sub>');}
+function uniq(arr){return [...new Set(arr)];}
 
-const BLUE='#2A5C8A';
-const RED='#B4483F';
-const WALL='#8B958E';
+let DIFFICULTY='중';
+const ALLOWED_LEVELS={'하':[1],'중':[1,2],'상':[1,2,3]};
 
-function randInt(a,b){
-  return Math.floor(Math.random()*(b-a+1))+a;
-}
+// ============================================================
+// TYPE 1: piston mole-ratio -> formula of X
+// ============================================================
+const PISTON_TEMPLATES=[{name:'AB2',p0:2,q0:1,r0:2,m:1,n:2},{name:'AB3',p0:1,q0:1,r0:1,m:1,n:3}];
+const ALL_FORMULAS=[{label:'AB',m:1,n:1},{label:'AB2',m:1,n:2},{label:'AB3',m:1,n:3},{label:'A2B',m:2,n:1},{label:'A3B',m:3,n:1}];
+function formulaText(m,n){return 'A'+(m>1?m:'')+'B'+(n>1?n:'');}
 
-function choice(arr){
-  return arr[randInt(0,arr.length-1)];
-}
-
-function shuffle(arr){
-  const a=arr.slice();
-
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-
-  return a;
-}
-
-function gcd(a,b){
-  a=Math.abs(a);
-  b=Math.abs(b);
-
-  return b ? gcd(b,a%b) : (a||1);
-}
-
-function subscript(s){
-  return s.replace(/(\d+)/g,'<sub>$1</sub>');
-}
-
-function uniq(arr){
-  return [...new Set(arr)];
-}
-
-
-/* =========================================================
-   TYPE 1
-========================================================= */
-
-const PISTON_TEMPLATES=[
-  {
-    name:'AB2',
-    p0:2,
-    q0:1,
-    r0:2,
-    m:1,
-    n:2
-  },
-  {
-    name:'AB3',
-    p0:1,
-    q0:1,
-    r0:1,
-    m:1,
-    n:3
-  }
-];
-
-const ALL_FORMULAS=[
-  {label:'AB',m:1,n:1},
-  {label:'AB2',m:1,n:2},
-  {label:'AB3',m:1,n:3},
-  {label:'A2B',m:2,n:1},
-  {label:'A3B',m:3,n:1}
-];
-
-function formulaText(m,n){
-  return 'A'+(m>1?m:'')+'B'+(n>1?n:'');
-}
-
-const FRAME_H=240;
-const WALL_TOP=8;
-const WALL_BOTTOM=224;
-const WALL_LEFT=14;
-const WALL_RIGHT=176;
-const UNIT_PX=22;
-const MIN_GAS=46;
-const MAX_GAS=WALL_BOTTOM-WALL_TOP-12;
-
-function gasHeightFor(total){
-  return Math.max(
-    MIN_GAS,
-    Math.min(MAX_GAS,total*UNIT_PX)
-  );
-}
-
-function placePositions(
-  count,
-  xmin,
-  xmax,
-  ymin,
-  ymax,
-  minDist
-){
+const FRAME_H=240, WALL_TOP=8, WALL_BOTTOM=224, WALL_LEFT=14, WALL_RIGHT=176, UNIT_PX=22, MIN_GAS=46;
+const MAX_GAS = WALL_BOTTOM-WALL_TOP-12;
+function gasHeightFor(total){return Math.max(MIN_GAS,Math.min(MAX_GAS,total*UNIT_PX));}
+function placePositions(count,xmin,xmax,ymin,ymax,minDist){
   const pts=[];
-
   for(let i=0;i<count;i++){
-
-    let best=null;
-    let bestScore=-1;
-
+    let best=null,bestScore=-1;
     for(let t=0;t<40;t++){
-
-      const x=xmin+Math.random()*(xmax-xmin);
-      const y=ymin+Math.random()*(ymax-ymin);
-
+      const x=xmin+Math.random()*(xmax-xmin), y=ymin+Math.random()*(ymax-ymin);
       let minD=Infinity;
-
-      for(const p of pts){
-
-        const d=Math.hypot(
-          p.x-x,
-          p.y-y
-        );
-
-        if(d<minD) minD=d;
-      }
-
-      if(pts.length===0){
-        best={x,y};
-        break;
-      }
-
-      if(minD>=minDist){
-        best={x,y};
-        break;
-      }
-
-      if(minD>bestScore){
-        bestScore=minD;
-        best={x,y};
-      }
+      for(const p of pts){const d=Math.hypot(p.x-x,p.y-y); if(d<minD)minD=d;}
+      if(pts.length===0){best={x,y};break;}
+      if(minD>=minDist){best={x,y};break;}
+      if(minD>bestScore){bestScore=minD;best={x,y};}
     }
-
     pts.push(best);
   }
-
   return pts;
 }
-
 function abMoleculeSvg(cx,cy,angle){
-
-  const dx=9*Math.cos(angle);
-  const dy=9*Math.sin(angle);
-
-  const ax=cx-dx;
-  const ay=cy-dy;
-
-  const bx=cx+dx;
-  const by=cy+dy;
-
-  return `
-  <line
-    x1="${ax}" y1="${ay}"
-    x2="${bx}" y2="${by}"
-    stroke="${WALL}"
-    stroke-width="2"
-    opacity="0.5"/>
-
-  <circle
-    cx="${ax}"
-    cy="${ay}"
-    r="8"
-    fill="${BLUE}"/>
-
-  <circle
-    cx="${bx}"
-    cy="${by}"
-    r="8"
-    fill="${RED}"/>
-  `;
+  const dx=9*Math.cos(angle),dy=9*Math.sin(angle);
+  const ax=cx-dx,ay=cy-dy,bx=cx+dx,by=cy+dy;
+  return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/><circle cx="${ax}" cy="${ay}" r="8" fill="${BLUE}"/><circle cx="${bx}" cy="${by}" r="8" fill="${RED}"/>`;
 }
-
 function b2MoleculeSvg(cx,cy,angle){
-
-  const dx=8.5*Math.cos(angle);
-  const dy=8.5*Math.sin(angle);
-
-  const ax=cx-dx;
-  const ay=cy-dy;
-
-  const bx=cx+dx;
-  const by=cy+dy;
-
-  return `
-  <line
-    x1="${ax}" y1="${ay}"
-    x2="${bx}" y2="${by}"
-    stroke="${WALL}"
-    stroke-width="2"
-    opacity="0.5"/>
-
-  <circle
-    cx="${ax}"
-    cy="${ay}"
-    r="8"
-    fill="${RED}"/>
-
-  <circle
-    cx="${bx}"
-    cy="${by}"
-    r="8"
-    fill="${RED}"/>
-  `;
+  const dx=8.5*Math.cos(angle),dy=8.5*Math.sin(angle);
+  const ax=cx-dx,ay=cy-dy,bx=cx+dx,by=cy+dy;
+  return `<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/><circle cx="${ax}" cy="${ay}" r="8" fill="${RED}"/><circle cx="${bx}" cy="${by}" r="8" fill="${RED}"/>`;
 }
-
 function xMoleculeSvg(cx,cy,n,angle){
-
-  let s=`
-  <circle
-    cx="${cx}"
-    cy="${cy}"
-    r="9"
-    fill="${BLUE}"/>
-  `;
-
+  let s=`<circle cx="${cx}" cy="${cy}" r="9" fill="${BLUE}"/>`;
   const dist=15;
-
   for(let i=0;i<n;i++){
-
     const a=angle+(i/n)*Math.PI*2;
-
-    const bx=cx+dist*Math.cos(a);
-    const by=cy+dist*Math.sin(a);
-
-    s+=`
-    <line
-      x1="${cx}" y1="${cy}"
-      x2="${bx}" y2="${by}"
-      stroke="${WALL}"
-      stroke-width="2"
-      opacity="0.5"/>
-
-    <circle
-      cx="${bx}"
-      cy="${by}"
-      r="7.5"
-      fill="${RED}"/>
-    `;
+    const bx=cx+dist*Math.cos(a), by=cy+dist*Math.sin(a);
+    s+=`<line x1="${cx}" y1="${cy}" x2="${bx}" y2="${by}" stroke="${WALL}" stroke-width="2" opacity="0.5"/><circle cx="${bx}" cy="${by}" r="7.5" fill="${RED}"/>`;
   }
-
   return s;
 }
-
 function buildVesselSVG(molecules,totalMol){
-
-  const gasH=gasHeightFor(totalMol);
-  const pistonY=WALL_BOTTOM-gasH;
-
-  const innerLeft=WALL_LEFT+6;
-  const innerRight=WALL_RIGHT-6;
-
-  const positions=placePositions(
-    molecules.length,
-    innerLeft+8,
-    innerRight-8,
-    pistonY+16,
-    WALL_BOTTOM-12,
-    34
-  );
-
+  const gasH=gasHeightFor(totalMol), pistonY=WALL_BOTTOM-gasH;
+  const innerLeft=WALL_LEFT+6, innerRight=WALL_RIGHT-6;
+  const positions=placePositions(molecules.length, innerLeft+8, innerRight-8, pistonY+16, WALL_BOTTOM-12, 34);
   let inner='';
-
   molecules.forEach((mol,i)=>{
-
-    const pos=positions[i];
-    const angle=Math.random()*Math.PI*2;
-
-    if(mol.type==='AB'){
-      inner+=abMoleculeSvg(
-        pos.x,
-        pos.y,
-        angle
-      );
-    }
-
-    else if(mol.type==='B2'){
-      inner+=b2MoleculeSvg(
-        pos.x,
-        pos.y,
-        angle
-      );
-    }
-
-    else if(mol.type==='X'){
-      inner+=xMoleculeSvg(
-        pos.x,
-        pos.y,
-        mol.n,
-        angle
-      );
-    }
+    const pos=positions[i], angle=Math.random()*Math.PI*2;
+    if(mol.type==='AB') inner+=abMoleculeSvg(pos.x,pos.y,angle);
+    else if(mol.type==='B2') inner+=b2MoleculeSvg(pos.x,pos.y,angle);
+    else if(mol.type==='X') inner+=xMoleculeSvg(pos.x,pos.y,mol.n,angle);
   });
-
-  return `
-  <svg
-    class="vessel"
-    viewBox="0 0 190 240">
-
-    <rect
-      x="${WALL_LEFT}"
-      y="${WALL_TOP}"
-      width="${WALL_RIGHT-WALL_LEFT}"
-      height="${WALL_BOTTOM-WALL_TOP}"
-      fill="#F7F9F6"
-      stroke="${WALL}"
-      stroke-width="3"/>
-
-    <rect
-      x="${WALL_LEFT-2}"
-      y="${pistonY-5}"
-      width="${WALL_RIGHT-WALL_LEFT+4}"
-      height="8"
-      fill="${WALL}"/>
-
-    <rect
-      x="${(WALL_LEFT+WALL_RIGHT)/2-6}"
-      y="${WALL_TOP-4}"
-      width="12"
-      height="${pistonY-WALL_TOP-1}"
-      fill="${WALL}"
-      opacity="0.85"/>
-
-    <g>${inner}</g>
-
-  </svg>
-  `;
+  return `<svg class="vessel" viewBox="0 0 190 240">
+    <rect x="${WALL_LEFT}" y="${WALL_TOP}" width="${WALL_RIGHT-WALL_LEFT}" height="${WALL_BOTTOM-WALL_TOP}" fill="#F7F9F6" stroke="${WALL}" stroke-width="3"/>
+    <rect x="${WALL_LEFT-2}" y="${pistonY-5}" width="${WALL_RIGHT-WALL_LEFT+4}" height="8" fill="${WALL}"/>
+    <rect x="${(WALL_LEFT+WALL_RIGHT)/2-6}" y="${WALL_TOP-4}" width="12" height="${pistonY-WALL_TOP-1}" fill="${WALL}" opacity="0.85"/>
+    <g>${inner}</g></svg>`;
 }
-
 function genPiston(){
-
-  const t=choice(PISTON_TEMPLATES);
-  const k=randInt(1,2);
-
-  const p=t.p0*k;
-  const q=t.q0*k;
-  const r=t.r0*k;
-
-  const extraB2=
-    Math.random()<0.65
-    ? randInt(0,2)
-    : 0;
-
-  const beforeAB=p;
-  const beforeB2=q+extraB2;
-
-  const afterX=r;
-  const afterB2=extraB2;
-
-  const beforeTotal=
-    beforeAB+beforeB2;
-
-  const afterTotal=
-    afterX+afterB2;
-
-  const beforeMols=[];
-
-  for(let i=0;i<beforeAB;i++)
-    beforeMols.push({type:'AB'});
-
-  for(let i=0;i<beforeB2;i++)
-    beforeMols.push({type:'B2'});
-
-  const afterMols=[];
-
-  for(let i=0;i<afterX;i++)
-    afterMols.push({
-      type:'X',
-      n:t.n
-    });
-
-  for(let i=0;i<afterB2;i++)
-    afterMols.push({
-      type:'B2'
-    });
-
-  const beforeSvg=
-    buildVesselSVG(
-      shuffle(beforeMols),
-      beforeTotal
-    );
-
-  const afterSvg=
-    buildVesselSVG(
-      shuffle(afterMols),
-      afterTotal
-    );
-
-  const eqLine=
-    `${p}AB(g) + ${q}B₂(g) → ${r}X(g)`+
-    (
-      beforeB2>q
-      ? `  (B₂ ${beforeB2-q}몰 미반응)`
-      : ''
-    );
-
-  const correctLabel=
-    formulaText(t.m,t.n);
-
-  const opts=
-    shuffle(ALL_FORMULAS);
-
-  const choices=
-    opts.map(o=>({
-      html:subscript(o.label),
-      value:o.label
-    }));
-
-  const aCount=p;
-  const bCount=p+q*2;
-
+  const kMap={'하':[1,1],'중':[1,2],'상':[1,3]};
+  const extraMap={'하':[0,0],'중':[0,1],'상':[0,2]};
+  const t = DIFFICULTY==='하' ? PISTON_TEMPLATES[0] : choice(PISTON_TEMPLATES);
+  const [kLo,kHi]=kMap[DIFFICULTY]; const k=randInt(kLo,kHi);
+  const p=t.p0*k, q=t.q0*k, r=t.r0*k;
+  const [eLo,eHi]=extraMap[DIFFICULTY];
+  const extraB2 = eHi>0 && Math.random()<0.65 ? randInt(eLo,eHi) : 0;
+  const beforeAB=p, beforeB2=q+extraB2, afterX=r, afterB2=extraB2;
+  const beforeTotal=beforeAB+beforeB2, afterTotal=afterX+afterB2;
+  const beforeMols=[]; for(let i=0;i<beforeAB;i++) beforeMols.push({type:'AB'}); for(let i=0;i<beforeB2;i++) beforeMols.push({type:'B2'});
+  const afterMols=[]; for(let i=0;i<afterX;i++) afterMols.push({type:'X',n:t.n}); for(let i=0;i<afterB2;i++) afterMols.push({type:'B2'});
+  const beforeSvg=buildVesselSVG(shuffle(beforeMols),beforeTotal);
+  const afterSvg=buildVesselSVG(shuffle(afterMols),afterTotal);
+  const eqLine=`${p}AB(g) + ${q}B\u2082(g) \u2192 ${r}X(g)`+(beforeB2>q?`  (B\u2082 ${beforeB2-q}\uBAB0 \uBBF8\uBC18\uC751)`:'');
+  const correctLabel=formulaText(t.m,t.n);
+  const opts=shuffle(ALL_FORMULAS);
+  const choices=opts.map(o=>({html:subscript(o.label), value:o.label}));
+  const aCount=p, bCount=p+q*2;
   const explanation=`
-    <div>
-      반응 전 A 원자 수 = ${p}
-    </div>
-
-    <div>
-      반응 전 B 원자 수 =
-      ${p} + ${q}×2 = ${bCount}
-    </div>
-
-    <div>
-      원자의 종류와 개수는 반응 후에도 보존됩니다.
-    </div>
-
-    <div>
-      X ${r}분자에 A 원자 ${aCount}개,
-      B 원자 ${bCount}개가 들어 있어야 합니다.
-    </div>
-
-    <div>
-      X 1분자당 A ${aCount/r}개,
-      B ${bCount/r}개
-      → X의 화학식은
-      <b>${subscript(correctLabel)}</b>
-    </div>
-
-    <div>
-      반응 전 전체 분자 수
-      ${beforeTotal}
-      :
-      반응 후 전체 분자 수
-      ${afterTotal}
-    </div>
-  `;
-
+    <div>반응 전 A 원자 수 = ${p}, B 원자 수 = ${p} + ${q}\u00d72 = ${bCount}</div>
+    <div>원자의 종류와 개수는 반응 후에도 보존되므로, X ${r}분자에 A 원자 ${aCount}개, B 원자 ${bCount}개가 들어 있어야 합니다.</div>
+    <div>X 1분자당 A ${(aCount/r).toFixed(0)}개, B ${(bCount/r).toFixed(0)}개 \u2192 X의 화학식은 <b>${subscript(correctLabel)}</b></div>
+    <div>반응 전 전체 분자 수 ${beforeTotal} : 반응 후 전체 분자 수 ${afterTotal} \u2192 일정 온도·압력에서 부피비도 ${beforeTotal}:${afterTotal}</div>`;
   const promptHTML=`
-    <span class="typeTag">
-      피스톤 몰비 모형
-    </span>
-
-    <p class="prompt">
-      그림은 AB(g)와 B₂(g)가 반응하여
-      X(g)를 생성하는 반응을 모형으로 나타낸 것이다.
-      X의 모형은 나타내지 않았다.
-
-      <span class="eq">
-        ${eqLine}
-      </span>
-    </p>
-
+    <span class="typeTag">피스톤 몰비 모형</span>
+    <p class="prompt">그림은 AB(g)와 B\u2082(g)가 반응하여 X(g)를 생성하는 반응을 모형으로 나타낸 것이다. X의 모형은 나타내지 않았다.
+    <span class="eq">${eqLine}</span></p>
     <div class="stage">
-
-      <div class="containerBlock">
-        <div class="label">반응 전</div>
-        ${beforeSvg}
-      </div>
-
-      <div class="arrow">→</div>
-
-      <div class="containerBlock">
-        <div class="label">반응 후</div>
-        ${afterSvg}
-      </div>
-
+      <div class="containerBlock"><div class="label">반응 전</div>${beforeSvg}</div>
+      <div class="arrow">\u2192</div>
+      <div class="containerBlock"><div class="label">반응 후</div>${afterSvg}</div>
     </div>
-
-    <div class="legend">
-      <span>
-        <i class="dot dotA"></i>A
-      </span>
-
-      <span>
-        <i class="dot dotB"></i>B
-      </span>
-    </div>
-
-    <p class="question">
-      X의 화학식으로 가장 적절한 것은?
-      (A, B는 임의의 원소 기호)
-    </p>
-  `;
-
-  return {
-    promptHTML,
-    choices,
-    correct:correctLabel,
-    explanation
-  };
+    <div class="legend"><span><i class="dot dotA"></i>A</span><span><i class="dot dotB"></i>B</span></div>
+    <p class="question">X의 화학식으로 가장 적절한 것은? (A, B는 임의의 원소 기호)</p>`;
+  return {promptHTML, choices, correct: correctLabel, explanation};
 }
 
-
-/* =========================================================
-   TYPE 2
-========================================================= */
-
+// ============================================================
+// TYPE 2: coefficient-sum ratio
+// ============================================================
 const REACTION_BANK=[
-  {
-    eq:'C₃H₈ + 5O₂ → 3CO₂ + 4H₂O',
-    reactants:[1,5],
-    products:[3,4]
-  },
-  {
-    eq:'CH₄ + 2O₂ → CO₂ + 2H₂O',
-    reactants:[1,2],
-    products:[1,2]
-  },
-  {
-    eq:'2C₂H₆ + 7O₂ → 4CO₂ + 6H₂O',
-    reactants:[2,7],
-    products:[4,6]
-  },
-  {
-    eq:'N₂ + 3H₂ → 2NH₃',
-    reactants:[1,3],
-    products:[2]
-  },
-  {
-    eq:'2KClO₃ → 2KCl + 3O₂',
-    reactants:[2],
-    products:[2,3]
-  },
-  {
-    eq:'4NH₃ + 5O₂ → 4NO + 6H₂O',
-    reactants:[4,5],
-    products:[4,6]
-  },
-  {
-    eq:'2Mg + O₂ → 2MgO',
-    reactants:[2,1],
-    products:[2]
-  },
-  {
-    eq:'N₂ + 2O₂ → 2NO₂',
-    reactants:[1,2],
-    products:[2]
-  },
-  {
-    eq:'4Al + 3O₂ → 2Al₂O₃',
-    reactants:[4,3],
-    products:[2]
-  },
-  {
-    eq:'2C₄H₁₀ + 13O₂ → 8CO₂ + 10H₂O',
-    reactants:[2,13],
-    products:[8,10]
-  }
+  {eq:'C\u2083H\u2088 + 5O\u2082 \u2192 3CO\u2082 + 4H\u2082O', reactants:[1,5], products:[3,4], level:2},
+  {eq:'CH\u2084 + 2O\u2082 \u2192 CO\u2082 + 2H\u2082O', reactants:[1,2], products:[1,2], level:1},
+  {eq:'2C\u2082H\u2086 + 7O\u2082 \u2192 4CO\u2082 + 6H\u2082O', reactants:[2,7], products:[4,6], level:3},
+  {eq:'N\u2082 + 3H\u2082 \u2192 2NH\u2083', reactants:[1,3], products:[2], level:1},
+  {eq:'2KClO\u2083 \u2192 2KCl + 3O\u2082', reactants:[2], products:[2,3], level:2},
+  {eq:'4NH\u2083 + 5O\u2082 \u2192 4NO + 6H\u2082O', reactants:[4,5], products:[4,6], level:3},
+  {eq:'2Mg + O\u2082 \u2192 2MgO', reactants:[2,1], products:[2], level:1},
+  {eq:'N\u2082 + 2O\u2082 \u2192 2NO\u2082', reactants:[1,2], products:[2], level:1},
+  {eq:'4Al + 3O\u2082 \u2192 2Al\u2082O\u2083', reactants:[4,3], products:[2], level:2},
+  {eq:'2C\u2084H\u2081\u2080 + 13O\u2082 \u2192 8CO\u2082 + 10H\u2082O', reactants:[2,13], products:[8,10], level:3},
 ];
-
-function ratioLabel(a,b){
-
-  const g=gcd(a,b);
-
-  return `${a/g} : ${b/g}`;
-}
-
+function ratioLabel(a,b){const g=gcd(a,b); return `${a/g} : ${b/g}`;}
 function genCoef(){
-
-  const r=choice(REACTION_BANK);
-
-  const rs=
-    r.reactants.reduce((a,b)=>a+b,0);
-
-  const ps=
-    r.products.reduce((a,b)=>a+b,0);
-
-  const correct=
-    ratioLabel(rs,ps);
-
+  const pool = REACTION_BANK.filter(r=>ALLOWED_LEVELS[DIFFICULTY].includes(r.level));
+  const r=choice(pool);
+  const rs=r.reactants.reduce((a,b)=>a+b,0), ps=r.products.reduce((a,b)=>a+b,0);
+  const correct=ratioLabel(rs,ps);
   const opts=new Set([correct]);
-
   while(opts.size<5){
-
-    const da=
-      Math.max(
-        1,
-        rs+randInt(-2,2)
-      );
-
-    const db=
-      Math.max(
-        1,
-        ps+randInt(-2,2)
-      );
-
-    opts.add(
-      ratioLabel(da,db)
-    );
+    const da=Math.max(1, rs+randInt(-2,2)), db=Math.max(1, ps+randInt(-2,2));
+    opts.add(ratioLabel(da,db));
   }
-
-  const choices=
-    shuffle([...opts])
-    .map(v=>({
-      html:v,
-      value:v
-    }));
-
+  const choices=shuffle([...opts]).map(v=>({html:v, value:v}));
   const explanation=`
-    <div>
-      반응식: ${r.eq}
-    </div>
-
-    <div>
-      반응물 계수의 합 =
-      ${r.reactants.join(' + ')}
-      = ${rs}
-    </div>
-
-    <div>
-      생성물 계수의 합 =
-      ${r.products.join(' + ')}
-      = ${ps}
-    </div>
-
-    <div>
-      따라서
-      ${rs} : ${ps}
-      =
-      <b>${correct}</b>
-    </div>
-  `;
-
+    <div>반응식: ${r.eq}</div>
+    <div>반응물 계수의 합 = ${r.reactants.join(' + ')} = ${rs}</div>
+    <div>생성물 계수의 합 = ${r.products.join(' + ')} = ${ps}</div>
+    <div>따라서 반응물 계수의 합 : 생성물 계수의 합 = ${rs} : ${ps} = <b>${correct}</b></div>`;
   const promptHTML=`
-    <span class="typeTag">
-      반응식 계수비
-    </span>
-
-    <p class="prompt">
-      다음은 어떤 반응의 화학 반응식이다.
-
-      <span class="eq">
-        ${r.eq}
-      </span>
-    </p>
-
-    <p class="question">
-      이 반응에서
-      (반응물 계수의 합)
-      :
-      (생성물 계수의 합)은?
-    </p>
-  `;
-
-  return {
-    promptHTML,
-    choices,
-    correct,
-    explanation
-  };
+    <span class="typeTag">반응식 계수비</span>
+    <p class="prompt">다음은 어떤 반응의 화학 반응식이다.<span class="eq">${r.eq}</span></p>
+    <p class="question">이 반응에서 (반응물 계수의 합) : (생성물 계수의 합)은?</p>`;
+  return {promptHTML, choices, correct, explanation};
 }
 
-
-/* =========================================================
-   TYPE 3
-========================================================= */
-
+// ============================================================
+// TYPE 3: mol-decrease true/false selection
+// ============================================================
 const MOL_REACTIONS=[
-  {
-    label:'H₂(g) + Cl₂(g) → 2HCl(g)',
-    before:2,
-    after:2
-  },
-  {
-    label:'N₂(g) + 3H₂(g) → 2NH₃(g)',
-    before:4,
-    after:2
-  },
-  {
-    label:'2H₂O(l) → 2H₂(g) + O₂(g)',
-    before:0,
-    after:3
-  },
-  {
-    label:'N₂(g) + 2O₂(g) → 2NO₂(g)',
-    before:3,
-    after:2
-  },
-  {
-    label:'2SO₂(g) + O₂(g) → 2SO₃(g)',
-    before:3,
-    after:2
-  },
-  {
-    label:'CaCO₃(s) → CaO(s) + CO₂(g)',
-    before:0,
-    after:1
-  },
-  {
-    label:'2NH₃(g) → N₂(g) + 3H₂(g)',
-    before:2,
-    after:4
-  },
-  {
-    label:'2H₂(g) + O₂(g) → 2H₂O(g)',
-    before:3,
-    after:2
-  }
+  {label:'H\u2082(g) + Cl\u2082(g) \u2192 2HCl(g)', before:2, after:2, level:1},
+  {label:'N\u2082(g) + 3H\u2082(g) \u2192 2NH\u2083(g)', before:4, after:2, level:1},
+  {label:'2H\u2082O(l) \u2192 2H\u2082(g) + O\u2082(g)', before:0, after:3, level:2},
+  {label:'N\u2082(g) + 2O\u2082(g) \u2192 2NO\u2082(g)', before:3, after:2, level:1},
+  {label:'2SO\u2082(g) + O\u2082(g) \u2192 2SO\u2083(g)', before:3, after:2, level:1},
+  {label:'CaCO\u2083(s) \u2192 CaO(s) + CO\u2082(g)', before:0, after:1, level:3},
+  {label:'2NH\u2083(g) \u2192 N\u2082(g) + 3H\u2082(g)', before:2, after:4, level:1},
+  {label:'2H\u2082(g) + O\u2082(g) \u2192 2H\u2082O(g)', before:3, after:2, level:1},
 ];
-
-const HANGUL=['ㄱ','ㄴ','ㄷ'];
-
-function comboLabel(idxArr){
-
-  if(idxArr.length===0)
-    return '없음';
-
-  return idxArr
-    .map(i=>HANGUL[i])
-    .join(', ');
-}
-
+const HANGUL=['\u3131','\u3134','\u3137']; // ㄱ ㄴ ㄷ
+function comboLabel(idxArr){ if(idxArr.length===0) return '없음'; return idxArr.map(i=>HANGUL[i]).join(', '); }
 function genDecrease(){
-
-  const picked=
-    shuffle(
-      [...Array(MOL_REACTIONS.length).keys()]
-    ).slice(0,3);
-
-  const items=
-    picked.map(i=>MOL_REACTIONS[i]);
-
-  const correctIdx=
-    [0,1,2].filter(
-      i=>items[i].after<items[i].before
-    );
-
-  const correctLabel=
-    comboLabel(correctIdx);
-
-  const subsets=[
-    [],
-    [0],
-    [1],
-    [2],
-    [0,1],
-    [0,2],
-    [1,2],
-    [0,1,2]
-  ];
-
-  const pool=
-    uniq(
-      subsets.map(
-        s=>comboLabel(s)
-      )
-    );
-
-  const others=
-    shuffle(
-      pool.filter(
-        l=>l!==correctLabel
-      )
-    ).slice(0,4);
-
-  const choices=
-    shuffle(
-      [correctLabel,...others]
-    ).map(v=>({
-      html:v,
-      value:v
-    }));
-
-  const stmtHTML=
-    items.map(
-      (it,i)=>`
-        <div class="stmt">
-          <b>${HANGUL[i]}.</b>
-          ${it.label}
-        </div>
-      `
-    ).join('');
-
-  const explanation=
-    items.map(
-      (it,i)=>`
-        <div>
-          ${HANGUL[i]}.
-          기체 몰
-          ${it.before}
-          →
-          ${it.after}
-          (
-          ${it.after<it.before
-            ? '감소'
-            : '감소 아님'}
-          )
-        </div>
-      `
-    ).join('')
-    +
-    `<div>정답: <b>${correctLabel}</b></div>`;
-
+  const pool = MOL_REACTIONS.filter(r=>ALLOWED_LEVELS[DIFFICULTY].includes(r.level));
+  const picked = shuffle([...Array(pool.length).keys()]).slice(0,3);
+  const items = picked.map(i=>pool[i]);
+  const correctIdx = [0,1,2].filter(i=>items[i].after<items[i].before);
+  const correctKey = correctIdx.join(',');
+  // build all non-empty + empty subsets of {0,1,2}
+  const subsets=[[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]];
+  const correctLabel = comboLabel(correctIdx);
+  let comboPool = subsets.map(s=>comboLabel(s));
+  comboPool = uniq(comboPool);
+  const others = shuffle(comboPool.filter(l=>l!==correctLabel)).slice(0,4);
+  const choices = shuffle([correctLabel, ...others]).map(v=>({html:v, value:v}));
+  const stmtHTML = items.map((it,i)=>`<div class="stmt"><b>${HANGUL[i]}.</b> ${it.label}</div>`).join('');
+  const explanation = items.map((it,i)=>{
+    const dec = it.after<it.before;
+    return `<div>${HANGUL[i]}. ${it.label} \u2192 기체 몰 ${it.before} \u2192 ${it.after} (${dec?'감소':'감소 아님'})</div>`;
+  }).join('') + `<div>정답: <b>${correctLabel}</b></div>`;
   const promptHTML=`
-    <span class="typeTag">
-      몰 변화 판별
-    </span>
-
-    <p class="prompt">
-      다음은 3가지 반응이다.
-    </p>
-
+    <span class="typeTag">몰 변화 판별</span>
+    <p class="prompt">다음은 3가지 반응이다.</p>
     ${stmtHTML}
-
-    <p class="question">
-      반응 후 기체의 총 양(mol)이
-      반응 전보다 감소하는 것을
-      있는 대로 고른 것은?
-    </p>
-  `;
-
-  return {
-    promptHTML,
-    choices,
-    correct:correctLabel,
-    explanation
-  };
+    <p class="question">반응 후 기체의 총 양(mol)이 반응 전보다 감소하는 것을 있는 대로 고른 것은?</p>`;
+  return {promptHTML, choices, correct: correctLabel, explanation};
 }
 
-
-/* =========================================================
-   TYPE 4
-========================================================= */
-
+// ============================================================
+// TYPE 4: limiting reactant container
+// ============================================================
 const LIMIT_TEMPLATES=[
-  {
-    a:3,b:1,c:2,
-    eq:'3A(g) + B(g) → 2C(g)'
-  },
-  {
-    a:2,b:1,c:2,
-    eq:'2A(g) + B(g) → 2C(g)'
-  },
-  {
-    a:1,b:1,c:2,
-    eq:'A(g) + B(g) → 2C(g)'
-  },
-  {
-    a:2,b:3,c:1,
-    eq:'2A(g) + 3B(g) → C(g)'
-  },
-  {
-    a:1,b:2,c:1,
-    eq:'A(g) + 2B(g) → C(g)'
-  }
+  {a:3,b:1,c:2, eq:'3A(g) + B(g) \u2192 2C(g)', level:2},
+  {a:2,b:1,c:2, eq:'2A(g) + B(g) \u2192 2C(g)', level:1},
+  {a:1,b:1,c:2, eq:'A(g) + B(g) \u2192 2C(g)', level:1},
+  {a:2,b:3,c:1, eq:'2A(g) + 3B(g) \u2192 C(g)', level:3},
+  {a:1,b:2,c:1, eq:'A(g) + 2B(g) \u2192 C(g)', level:1},
 ];
-
 function genLimiting(){
-
-  const t=choice(LIMIT_TEMPLATES);
-
-  const p=randInt(1,4);
-  const q=randInt(1,4);
-
-  const A0=t.a*p;
-  const B0=t.b*q;
-
+  const pqMap={'하':[1,2],'중':[1,3],'상':[1,5]};
+  const askMap={'하':['product','leftover'],'중':['product','leftover','total'],'상':['product','leftover','total']};
+  const pool = LIMIT_TEMPLATES.filter(t=>ALLOWED_LEVELS[DIFFICULTY].includes(t.level));
+  const t=choice(pool);
+  const [lo,hi]=pqMap[DIFFICULTY];
+  let p=randInt(lo,hi), q=randInt(lo,hi);
+  const A0=t.a*p, B0=t.b*q;
   const extent=Math.min(p,q);
+  const reactedA=t.a*extent, reactedB=t.b*extent, producedC=t.c*extent;
+  const leftoverA=A0-reactedA, leftoverB=B0-reactedB;
+  const beforeTotal=A0+B0, afterTotal=leftoverA+leftoverB+producedC;
 
-  const reactedA=t.a*extent;
-  const reactedB=t.b*extent;
-  const producedC=t.c*extent;
+  let askType = choice(askMap[DIFFICULTY]);
+  if(askType==='leftover' && leftoverA===0 && leftoverB===0) askType='product';
 
-  const leftoverA=
-    A0-reactedA;
-
-  const leftoverB=
-    B0-reactedB;
-
-  const beforeTotal=
-    A0+B0;
-
-  const afterTotal=
-    leftoverA+
-    leftoverB+
-    producedC;
-
-  let askType=
-    choice([
-      'product',
-      'leftover',
-      'total'
-    ]);
-
-  if(
-    askType==='leftover' &&
-    leftoverA===0 &&
-    leftoverB===0
-  ){
-    askType='product';
-  }
-
-  let questionText;
-  let correctVal;
-
+  let questionText, correctVal;
   if(askType==='product'){
-
-    questionText=
-      '반응 후 생성된 C(g)의 양(mol)은?';
-
+    questionText='반응 후 생성된 C(g)의 양(mol)은?';
     correctVal=producedC;
-
-  }
-
-  else if(askType==='leftover'){
-
-    const excessName=
-      leftoverA>0
-      ? 'A'
-      : 'B';
-
-    const excessVal=
-      leftoverA>0
-      ? leftoverA
-      : leftoverB;
-
-    questionText=
-      `반응 후 남아 있는 ${excessName}(g)의 양(mol)은?`;
-
+  } else if(askType==='leftover'){
+    const excessName = leftoverA>0 ? 'A' : 'B';
+    const excessVal = leftoverA>0 ? leftoverA : leftoverB;
+    questionText=`반응 후 남아 있는 ${excessName}(g)의 양(mol)은?`;
     correctVal=excessVal;
-
+  } else {
+    questionText='반응 전 전체 기체 양(mol)과 반응 후 전체 기체 양(mol)의 차이는?';
+    correctVal=Math.abs(beforeTotal-afterTotal);
   }
-
-  else{
-
-    questionText=
-      '반응 전 전체 기체 양(mol)과 반응 후 전체 기체 양(mol)의 차이는?';
-
-    correctVal=
-      Math.abs(
-        beforeTotal-afterTotal
-      );
-  }
-
-  const optSet=
-    new Set([correctVal]);
-
+  const optSet=new Set([correctVal]);
   while(optSet.size<5){
-
-    const d=
-      correctVal+
-      choice([-2,-1,1,2,3]);
-
-    if(d>=0)
-      optSet.add(d);
+    const d=correctVal+choice([-2,-1,1,2,3]);
+    if(d>=0) optSet.add(d);
   }
+  const choices=shuffle([...optSet]).map(v=>({html:`${v} mol`, value:String(v)}));
 
-  const choices=
-    shuffle([...optSet])
-    .map(v=>({
-      html:`${v} mol`,
-      value:String(v)
-    }));
-
-  const limitName=
-    p<=q
-    ? 'A'
-    : 'B';
-
+  const limitName = p<=q ? 'A' : (q<p ? 'B' : 'A, B 동시');
   const explanation=`
-    <div>
-      반응식: ${t.eq}
-    </div>
-
-    <div>
-      반응한 정도 =
-      ${extent}세트
-    </div>
-
-    <div>
-      반응한 A =
-      ${reactedA} mol
-    </div>
-
-    <div>
-      반응한 B =
-      ${reactedB} mol
-    </div>
-
-    <div>
-      생성된 C =
-      ${producedC} mol
-    </div>
-
-    <div>
-      남은 A =
-      ${leftoverA} mol
-    </div>
-
-    <div>
-      남은 B =
-      ${leftoverB} mol
-    </div>
-
-    <div>
-      반응 전 전체 =
-      ${beforeTotal} mol
-    </div>
-
-    <div>
-      반응 후 전체 =
-      ${afterTotal} mol
-    </div>
-
-    <div>
-      한계 반응물:
-      <b>${limitName}</b>
-    </div>
-
-    <div>
-      정답:
-      <b>${correctVal} mol</b>
-    </div>
-  `;
-
+    <div>반응식: ${t.eq}</div>
+    <div>A(g) ${A0}mol \u2192 ${t.a}mol씩 ${p}세트 분, B(g) ${B0}mol \u2192 ${t.b}mol씩 ${q}세트 분</div>
+    <div>세트 수가 더 적은 쪽(${extent}세트)까지만 반응 진행 \u2192 한계는 ${limitName}</div>
+    <div>반응한 A = ${reactedA}mol, 반응한 B = ${reactedB}mol, 생성된 C = ${producedC}mol</div>
+    <div>남은 A = ${leftoverA}mol, 남은 B = ${leftoverB}mol</div>
+    <div>반응 전 전체 = ${beforeTotal}mol, 반응 후 전체 = ${afterTotal}mol</div>
+    <div>정답: <b>${correctVal} mol</b></div>`;
   const promptHTML=`
-    <span class="typeTag">
-      한정 반응물
-    </span>
-
-    <p class="prompt">
-      다음은 A(g)와 B(g)가 반응하여
-      C(g)를 생성하는 반응이다.
-
-      <span class="eq">
-        ${t.eq}
-      </span>
-    </p>
-
-    <p class="prompt">
-      용기에 A(g) ${A0}mol과
-      B(g) ${B0}mol을 넣고
-      어느 한 기체가 모두 소모될 때까지
-      반응시켰다.
-    </p>
-
+    <span class="typeTag">한정 반응물</span>
+    <p class="prompt">다음은 A(g)와 B(g)가 반응하여 C(g)를 생성하는 반응의 화학 반응식이다.<span class="eq">${t.eq}</span></p>
+    <p class="prompt">그림은 용기에 A(g) ${A0}mol과 B(g) ${B0}mol을 넣어 어느 한 기체가 모두 소모될 때까지 반응시키는 과정을 나타낸 것이다.</p>
     <div class="boxrow">
-
-      <div class="box">
-        <div class="t">반응 전</div>
-        A(g) ${A0} mol<br>
-        B(g) ${B0} mol
-      </div>
-
-      <div class="arrow">→</div>
-
-      <div class="box">
-        <div class="t">반응 후</div>
-        ?
-      </div>
-
+      <div class="box"><div class="t">반응 전</div>A(g) ${A0} mol<br>B(g) ${B0} mol</div>
+      <div class="arrow">\u2192</div>
+      <div class="box"><div class="t">반응 후</div>?</div>
     </div>
-
-    <p class="question">
-      ${questionText}
-    </p>
-  `;
-
-  return {
-    promptHTML,
-    choices,
-    correct:String(correctVal),
-    explanation
-  };
+    <p class="question">${questionText}</p>`;
+  return {promptHTML, choices, correct:String(correctVal), explanation};
 }
 
-
-/* =========================================================
-   ★★★ 개선된 Apple Pencil 메모장 ★★★
-========================================================= */
-
+// ============================================================
+// scratchpad (Apple Pencil / touch / mouse drawing)
+// ============================================================
 (function(){
+  const canvas = document.getElementById('noteCanvas');
+  const ctx = canvas.getContext('2d');
+  const NOTE_HEIGHT = 420;
+  let strokes = [];
+  let currentStroke = null;
+  let drawing = false;
+  let currentColor = '#1B2A23';
+  let eraserOn = false;
 
-  const canvas=
-    document.getElementById('noteCanvas');
+  canvas.addEventListener('contextmenu', e=>e.preventDefault());
+  canvas.style.webkitUserSelect='none';
+  canvas.style.webkitTouchCallout='none';
 
-  const ctx=
-    canvas.getContext('2d',{
-      alpha:true,
-      desynchronized:true
-    });
-
-  let strokes=[];
-
-  let currentStroke=null;
-
-  let drawing=false;
-
-  let currentColor='#1B2A23';
-
-  let eraserOn=false;
-
-  let cssWidth=0;
-
-  let cssHeight=420;
-
-
-  /* ---------------------------------------------
-     캔버스 크기 설정
-  --------------------------------------------- */
-
-  function setupCanvas(){
-
-    const rect=
-      canvas.getBoundingClientRect();
-
-    cssWidth=
-      Math.max(1,rect.width);
-
-    cssHeight=
-      Math.max(1,rect.height);
-
-    const dpr=
-      Math.min(
-        window.devicePixelRatio || 1,
-        3
-      );
-
-    /*
-      실제 픽셀은 고해상도,
-      화면에는 CSS 크기.
-      → Apple Pencil 선이 훨씬 선명해짐
-    */
-
-    canvas.width=
-      Math.round(cssWidth*dpr);
-
-    canvas.height=
-      Math.round(cssHeight*dpr);
-
-    ctx.setTransform(
-      dpr,
-      0,
-      0,
-      dpr,
-      0,
-      0
-    );
-
-    redraw();
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, rect.width) * dpr;
+    canvas.height = NOTE_HEIGHT * dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    redrawAll(rect.width);
   }
-
-
-  /* ---------------------------------------------
-     포인터 좌표
-  --------------------------------------------- */
 
   function getPoint(e){
-
-    const rect=
-      canvas.getBoundingClientRect();
-
+    const rect = canvas.getBoundingClientRect();
     return {
-      x:
-        e.clientX-
-        rect.left,
-
-      y:
-        e.clientY-
-        rect.top,
-
-      pressure:
-        e.pointerType==='pen'
-        ? Math.max(
-            0.15,
-            Math.min(
-              1,
-              e.pressure || 0.5
-            )
-          )
-        : 0.5,
-
-      time:performance.now()
+      xf: (e.clientX - rect.left) / rect.width,
+      y: (e.clientY - rect.top),
+      pressure: (e.pressure && e.pressure > 0) ? e.pressure : 0.5
     };
   }
 
+  function widthFor(s){ return s.eraser ? 22 : 2.4; }
 
-  /* ---------------------------------------------
-     압력 기반 선 굵기
-  --------------------------------------------- */
-
-  function getWidth(point){
-
-    if(eraserOn)
-      return 24;
-
-    /*
-      Apple Pencil 압력에 따라
-      너무 극단적으로 변하지 않게 함
-    */
-
-    const p=
-      Math.max(
-        0.2,
-        Math.min(
-          1,
-          point.pressure
-        )
-      );
-
-    return 1.5 + p*2.4;
-  }
-
-
-  /* ---------------------------------------------
-     두 점 사이 부드러운 선
-  --------------------------------------------- */
-
-  function drawSegment(
-    p0,
-    p1,
-    color,
-    eraser
-  ){
-
-    const mx=
-      (p0.x+p1.x)/2;
-
-    const my=
-      (p0.y+p1.y)/2;
-
-    const width=
-      eraser
-      ? 24
-      : (
-        getWidth(p0)+
-        getWidth(p1)
-      )/2;
-
-    ctx.save();
-
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
-
-    ctx.lineWidth=width;
-
-    if(eraser){
-
-      ctx.globalCompositeOperation=
-        'destination-out';
-
-      ctx.strokeStyle=
-        'rgba(0,0,0,1)';
-
-    }else{
-
-      ctx.globalCompositeOperation=
-        'source-over';
-
-      ctx.strokeStyle=color;
-    }
-
-    /*
-      quadraticCurveTo를 이용해
-      직선 연결보다 훨씬 부드럽게 연결
-    */
-
+  function drawStrokeSegment(s, widthPx, p0, p1, cssWidth){
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
+    ctx.lineWidth = widthPx;
     ctx.beginPath();
-
-    ctx.moveTo(
-      p0.x,
-      p0.y
-    );
-
-    ctx.quadraticCurveTo(
-      p0.x,
-      p0.y,
-      mx,
-      my
-    );
-
+    ctx.moveTo(p0.xf*cssWidth, p0.y);
+    ctx.lineTo(p1.xf*cssWidth, p1.y);
     ctx.stroke();
-
-    ctx.restore();
   }
 
-
-  /* ---------------------------------------------
-     전체 다시 그리기
-  --------------------------------------------- */
-
-  function redraw(){
-
-    ctx.save();
-
-    ctx.clearRect(
-      0,
-      0,
-      cssWidth,
-      cssHeight
-    );
-
-    ctx.restore();
-
-    for(const s of strokes){
-
-      if(s.points.length===1){
-
-        const p=s.points[0];
-
-        ctx.save();
-
-        ctx.globalCompositeOperation=
-          s.eraser
-          ? 'destination-out'
-          : 'source-over';
-
-        ctx.fillStyle=
-          s.eraser
-          ? 'rgba(0,0,0,1)'
-          : s.color;
-
-        ctx.beginPath();
-
-        ctx.arc(
-          p.x,
-          p.y,
-          s.eraser
-          ? 12
-          : getWidth(p)/2,
-          0,
-          Math.PI*2
-        );
-
-        ctx.fill();
-
-        ctx.restore();
-
-      }else{
-
-        for(
-          let i=1;
-          i<s.points.length;
-          i++
-        ){
-
-          drawSegment(
-            s.points[i-1],
-            s.points[i],
-            s.color,
-            s.eraser
-          );
-        }
+  function redrawAll(cssWidth){
+    cssWidth = cssWidth || canvas.getBoundingClientRect().width;
+    ctx.clearRect(0,0,cssWidth,NOTE_HEIGHT);
+    strokes.forEach(s=>{
+      const w = widthFor(s);
+      for(let i=1;i<s.points.length;i++){
+        drawStrokeSegment(s, w, s.points[i-1], s.points[i], cssWidth);
       }
-    }
-
-    ctx.globalCompositeOperation=
-      'source-over';
-  }
-
-
-  /* ---------------------------------------------
-     Apple Pencil / 터치 시작
-  --------------------------------------------- */
-
-  function pointerDown(e){
-
-    /*
-      매우 중요:
-      iPad Safari의 기본 동작 차단
-    */
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    try{
-      canvas.setPointerCapture(
-        e.pointerId
-      );
-    }catch(err){}
-
-    drawing=true;
-
-    const p=
-      getPoint(e);
-
-    currentStroke={
-      color:currentColor,
-      eraser:eraserOn,
-      points:[p]
-    };
-
-    strokes.push(
-      currentStroke
-    );
-
-    /*
-      점 하나도 즉시 표시
-    */
-
-    ctx.save();
-
-    ctx.globalCompositeOperation=
-      eraserOn
-      ? 'destination-out'
-      : 'source-over';
-
-    ctx.fillStyle=
-      eraserOn
-      ? 'rgba(0,0,0,1)'
-      : currentColor;
-
-    ctx.beginPath();
-
-    ctx.arc(
-      p.x,
-      p.y,
-      eraserOn
-      ? 12
-      : getWidth(p)/2,
-      0,
-      Math.PI*2
-    );
-
-    ctx.fill();
-
-    ctx.restore();
-  }
-
-
-  /* ---------------------------------------------
-     Apple Pencil 움직임
-  --------------------------------------------- */
-
-  function pointerMove(e){
-
-    if(!drawing || !currentStroke)
-      return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const events=
-      typeof e.getCoalescedEvents==='function'
-      ? e.getCoalescedEvents()
-      : [e];
-
-    for(const ev of events){
-
-      const p=
-        getPoint(ev);
-
-      const points=
-        currentStroke.points;
-
-      const prev=
-        points[points.length-1];
-
-      /*
-        너무 작은 좌표 변화는 무시.
-        떨림을 줄여줌.
-      */
-
-      const distance=
-        Math.hypot(
-          p.x-prev.x,
-          p.y-prev.y
-        );
-
-      if(distance<0.35)
-        continue;
-
-      points.push(p);
-
-      drawSegment(
-        prev,
-        p,
-        currentStroke.color,
-        currentStroke.eraser
-      );
-    }
-  }
-
-
-  /* ---------------------------------------------
-     필기 종료
-  --------------------------------------------- */
-
-  function pointerUp(e){
-
-    e.preventDefault();
-
-    drawing=false;
-    currentStroke=null;
-
-    try{
-      canvas.releasePointerCapture(
-        e.pointerId
-      );
-    }catch(err){}
-  }
-
-
-  /* ---------------------------------------------
-     브라우저 기본 메뉴 완전 차단
-  --------------------------------------------- */
-
-  canvas.addEventListener(
-    'contextmenu',
-    e=>{
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'selectstart',
-    e=>{
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'dragstart',
-    e=>{
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'gesturestart',
-    e=>{
-      e.preventDefault();
-      e.stopPropagation();
-    },
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'touchstart',
-    e=>{
-      e.preventDefault();
-    },
-    {passive:false}
-  );
-
-
-  /* ---------------------------------------------
-     Pointer Events
-  --------------------------------------------- */
-
-  canvas.addEventListener(
-    'pointerdown',
-    pointerDown,
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'pointermove',
-    pointerMove,
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'pointerup',
-    pointerUp,
-    {passive:false}
-  );
-
-  canvas.addEventListener(
-    'pointercancel',
-    pointerUp,
-    {passive:false}
-  );
-
-
-  /* ---------------------------------------------
-     색상 버튼
-  --------------------------------------------- */
-
-  document
-    .querySelectorAll('.swatch')
-    .forEach(sw=>{
-
-      sw.addEventListener(
-        'click',
-        ()=>{
-
-          document
-            .querySelectorAll('.swatch')
-            .forEach(x=>
-              x.classList.remove('active')
-            );
-
-          sw.classList.add('active');
-
-          currentColor=
-            sw.dataset.color;
-
-          eraserOn=false;
-
-          document
-            .getElementById('eraserBtn')
-            .classList.remove('active');
-        }
-      );
     });
-
-
-  /* ---------------------------------------------
-     지우개
-  --------------------------------------------- */
-
-  document
-    .getElementById('eraserBtn')
-    .addEventListener(
-      'click',
-      ()=>{
-
-        eraserOn=!eraserOn;
-
-        document
-          .getElementById('eraserBtn')
-          .classList.toggle(
-            'active',
-            eraserOn
-          );
-      }
-    );
-
-
-  /* ---------------------------------------------
-     전체 지우기
-  --------------------------------------------- */
-
-  function clearCanvas(){
-
-    /*
-      단순히 clearRect만 하지 않고
-      strokes 자체도 삭제.
-      → 다음 문제에서도 확실히 빈 종이
-    */
-
-    strokes=[];
-
-    currentStroke=null;
-
-    drawing=false;
-
-    ctx.save();
-
-    ctx.clearRect(
-      0,
-      0,
-      cssWidth,
-      cssHeight
-    );
-
-    ctx.restore();
+    ctx.globalCompositeOperation='source-over';
   }
 
+  canvas.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    drawing = true;
+    const p = getPoint(e);
+    currentStroke = { color: currentColor, eraser: eraserOn, points:[p] };
+    strokes.push(currentStroke);
+  });
+  canvas.addEventListener('pointermove', e=>{
+    if(!drawing || !currentStroke) return;
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const prev = currentStroke.points[currentStroke.points.length-1];
+    const p = getPoint(e);
+    currentStroke.points.push(p);
+    drawStrokeSegment(currentStroke, widthFor(currentStroke), prev, p, rect.width);
+  });
+  function endStroke(e){ drawing=false; currentStroke=null; try{canvas.releasePointerCapture(e.pointerId);}catch(err){} }
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
 
-  document
-    .getElementById('clearNoteBtn')
-    .addEventListener(
-      'click',
-      clearCanvas
-    );
+  document.querySelectorAll('.swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
+      sw.classList.add('active');
+      currentColor = sw.dataset.color;
+      eraserOn = false;
+      document.getElementById('eraserBtn').classList.remove('active');
+    });
+  });
+  document.getElementById('eraserBtn').addEventListener('click', ()=>{
+    eraserOn = !eraserOn;
+    document.getElementById('eraserBtn').classList.toggle('active', eraserOn);
+  });
+  document.getElementById('clearNoteBtn').addEventListener('click', ()=>{
+    strokes = [];
+    redrawAll();
+  });
 
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 
-  /* ---------------------------------------------
-     문제 변경용 완전 초기화
-  --------------------------------------------- */
-
-  window.clearNotepad=function(){
-
-    /*
-      새 문제로 넘어갈 때
-      무조건 완전히 새 종이로 시작
-    */
-
-    strokes=[];
-
-    currentStroke=null;
-
-    drawing=false;
-
-    setupCanvas();
-
-    clearCanvas();
-  };
-
-
-  window.addEventListener(
-    'resize',
-    ()=>{
-      setupCanvas();
-    }
-  );
-
-  setupCanvas();
-
+  window.clearNotepad = function(){ strokes = []; redrawAll(); };
 })();
 
-
-/* =========================================================
-   문제 컨트롤러
-========================================================= */
-
-const GENERATORS={
-  piston:genPiston,
-  coef:genCoef,
-  decrease:genDecrease,
-  limiting:genLimiting
-};
-
-const TYPE_NAMES={
-  piston:'피스톤 몰비 모형',
-  coef:'반응식 계수비',
-  decrease:'몰 변화 판별',
-  limiting:'한정 반응물'
-};
-
-const TYPE_KEYS=
-  Object.keys(GENERATORS);
+// ============================================================
+// controller (history-based, supports 이전/다음 navigation)
+// ============================================================
+const GENERATORS={piston:genPiston, coef:genCoef, decrease:genDecrease, limiting:genLimiting};
+const TYPE_NAMES={piston:'피스톤 몰비 모형', coef:'반응식 계수비', decrease:'몰 변화 판별', limiting:'한정 반응물'};
+const TYPE_KEYS=Object.keys(GENERATORS);
 
 const state={
-  setsCompleted:0,
-
-  totalCorrect:0,
-
-  totalCount:0,
-
-  wrongByType:{
-    piston:0,
-    coef:0,
-    decrease:0,
-    limiting:0
-  },
-
-  mode:'normal',
-
-  roundLength:10,
-
-  history:[],
-
-  qPos:-1,
-
-  weakType:null
+  setsCompleted:0, totalCorrect:0, totalCount:0,
+  wrongByType:{piston:0,coef:0,decrease:0,limiting:0},
+  mode:'normal', roundLength:10, history:[], qPos:-1,
+  weakType:null,
 };
 
-
-/* =========================================================
-   상태바
-========================================================= */
-
 function updateStatusBar(){
-
-  const posLabel=
-    state.qPos>=0
-    ? `${state.qPos+1}/${state.roundLength}`
-    : `${state.roundLength}문제`;
-
-  const label=
-    state.mode==='weak'
+  const posLabel = state.qPos>=0 ? `${state.qPos+1}/${state.roundLength}` : `${state.roundLength}문제`;
+  const label = state.mode==='weak'
     ? `약점 클리닉(${TYPE_NAMES[state.weakType]}) · ${posLabel}`
     : `세트 ${state.setsCompleted+1} · ${posLabel}`;
-
-  document
-    .getElementById('roundLabel')
-    .textContent=label;
-
-  document
-    .getElementById('cumStat')
-    .textContent=
-      `${state.totalCorrect}/${state.totalCount}`;
+  document.getElementById('roundLabel').textContent = label;
+  document.getElementById('cumStat').textContent = `${state.totalCorrect}/${state.totalCount}`;
 }
 
-
-function pickType(){
-
-  return state.mode==='weak'
-    ? state.weakType
-    : choice(TYPE_KEYS);
-}
-
+function pickType(){ return state.mode==='weak' ? state.weakType : choice(TYPE_KEYS); }
 
 function startNormalSet(){
-
-  state.mode='normal';
-
-  state.roundLength=10;
-
-  state.history=[];
-
-  state.qPos=-1;
-
+  state.mode='normal'; state.roundLength=10; state.history=[]; state.qPos=-1;
   goToQuestion(0);
 }
-
-
 function startWeakRound(type){
-
-  state.mode='weak';
-
-  state.weakType=type;
-
-  state.roundLength=5;
-
-  state.history=[];
-
-  state.qPos=-1;
-
+  state.mode='weak'; state.weakType=type; state.roundLength=5; state.history=[]; state.qPos=-1;
   goToQuestion(0);
 }
-
-
-/* =========================================================
-   문제 이동
-========================================================= */
 
 function goToQuestion(idx){
-
-  if(idx<0)
-    return;
-
-  if(idx>=state.roundLength){
-
-    showRoundResult();
-
-    return;
-  }
-
+  if(idx<0) return;
+  if(idx>=state.roundLength){ showRoundResult(); return; }
   state.qPos=idx;
-
-
-  /*
-    해당 문제를 처음 만드는 경우
-  */
-
   if(!state.history[idx]){
-
-    const type=
-      pickType();
-
-    const q=
-      GENERATORS[type]();
-
+    const type=pickType();
+    const q=GENERATORS[type]();
     q.type=type;
-
-    state.history[idx]={
-      q,
-      chosenValue:null,
-      isCorrect:null,
-      answered:false
-    };
+    state.history[idx]={q, chosenValue:null, isCorrect:null, answered:false};
   }
-
-
-  /*
-    ★ 문제 이동할 때마다 메모장 완전 삭제
-  */
-
-  if(window.clearNotepad)
-    window.clearNotepad();
-
-
+  if(window.clearNotepad) window.clearNotepad();
   renderQuestionUI();
 }
 
-
-/* =========================================================
-   문제 화면
-========================================================= */
-
 function renderQuestionUI(){
-
   updateStatusBar();
-
-  const entry=
-    state.history[state.qPos];
-
-  const q=
-    entry.q;
-
-  const card=
-    document.getElementById('card');
-
-  const isLast=
-    state.qPos===
-    state.roundLength-1;
-
-  card.innerHTML=`
-
+  const entry=state.history[state.qPos];
+  const q=entry.q;
+  const card=document.getElementById('card');
+  const isLast = state.qPos===state.roundLength-1;
+  card.innerHTML = `
     ${q.promptHTML}
-
-    <div
-      class="choices"
-      id="choices">
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback">
+      <div class="verdict" id="verdict"></div>
+      <div class="expl" id="expl"></div>
     </div>
-
-    <div
-      class="feedback"
-      id="feedback">
-
-      <div
-        class="verdict"
-        id="verdict">
-      </div>
-
-      <div
-        class="expl"
-        id="expl">
-      </div>
-
-    </div>
-
-    <div
-      class="actions">
-
-      <button
-        class="next show prev"
-        id="prevBtn"
-        style="
-          ${state.qPos===0
-            ? 'visibility:hidden;'
-            : ''}
-        ">
-        ← 이전 문제
-      </button>
-
-      <button
-        class="next"
-        id="nextBtn">
-
-        ${isLast
-          ? '세트 결과 보기'
-          : '다음 문제 →'}
-
-      </button>
-
-    </div>
-  `;
-
-
-  const choicesEl=
-    document.getElementById('choices');
-
-
+    <div class="actions" style="justify-content:space-between;">
+      <button class="next show" id="prevBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);${state.qPos===0?'visibility:hidden;':''}">이전 문제</button>
+      <button class="next" id="nextBtn">${isLast ? '세트 결과 보기' : '다음 문제'}</button>
+    </div>`;
+  const choicesEl=document.getElementById('choices');
   q.choices.forEach(c=>{
-
-    const btn=
-      document.createElement('button');
-
+    const btn=document.createElement('button');
     btn.className='choice';
-
     btn.innerHTML=c.html;
-
-    btn.dataset.value=
-      c.value;
-
-    btn.onclick=()=>{
-      selectAnswer(
-        btn,
-        c.value
-      );
-    };
-
+    btn.dataset.value=c.value;
+    btn.onclick=()=>selectAnswer(btn,c.value);
     choicesEl.appendChild(btn);
   });
 
-
-  /*
-    이미 풀었던 문제라면
-    답 상태를 복원
-  */
-
   if(entry.answered){
-
-    document
-      .querySelectorAll('.choice')
-      .forEach(b=>{
-
-        b.disabled=true;
-
-        if(
-          b.dataset.value===
-          q.correct
-        ){
-          b.classList.add('correct');
-        }
-
-        else if(
-          b.dataset.value===
-          entry.chosenValue
-        ){
-          b.classList.add('wrong');
-        }
-      });
-
-
-    const fb=
-      document.getElementById('feedback');
-
-    fb.className=
-      'feedback show '+
-      (
-        entry.isCorrect
-        ? 'ok'
-        : 'no'
-      );
-
-
-    const verdict=
-      document.getElementById('verdict');
-
-    verdict.className=
-      'verdict '+
-      (
-        entry.isCorrect
-        ? 'ok'
-        : 'no'
-      );
-
-    verdict.textContent=
-      entry.isCorrect
-      ? '정답입니다.'
-      : '오답입니다.';
-
-
-    document
-      .getElementById('expl')
-      .innerHTML=
-        q.explanation;
-
-
-    document
-      .getElementById('nextBtn')
-      .classList.add('show');
+    document.querySelectorAll('.choice').forEach(b=>{
+      b.disabled=true;
+      if(b.dataset.value===q.correct) b.classList.add('correct');
+      else if(b.dataset.value===entry.chosenValue) b.classList.add('wrong');
+    });
+    const fb=document.getElementById('feedback');
+    fb.className='feedback show '+(entry.isCorrect?'ok':'no');
+    document.getElementById('verdict').className='verdict '+(entry.isCorrect?'ok':'no');
+    document.getElementById('verdict').textContent = entry.isCorrect ? '정답입니다.' : '오답입니다.';
+    document.getElementById('expl').innerHTML = q.explanation;
+    document.getElementById('nextBtn').classList.add('show');
   }
 
-
-  /*
-    이전 문제
-  */
-
-  document
-    .getElementById('prevBtn')
-    .onclick=()=>{
-
-      goToQuestion(
-        state.qPos-1
-      );
-    };
-
-
-  /*
-    다음 문제
-  */
-
-  document
-    .getElementById('nextBtn')
-    .onclick=()=>{
-
-      const cur=
-        state.history[state.qPos];
-
-      if(!cur.answered)
-        return;
-
-      goToQuestion(
-        state.qPos+1
-      );
-    };
+  document.getElementById('prevBtn').onclick=()=>goToQuestion(state.qPos-1);
+  document.getElementById('nextBtn').onclick=()=>{
+    const cur=state.history[state.qPos];
+    if(!cur.answered) return;
+    goToQuestion(state.qPos+1);
+  };
 }
 
-
-/* =========================================================
-   답 선택
-========================================================= */
-
-function selectAnswer(
-  btn,
-  chosenValue
-){
-
-  const entry=
-    state.history[state.qPos];
-
-  if(entry.answered)
-    return;
-
-  const q=
-    entry.q;
-
-  const isCorrect=
-    chosenValue===
-    q.correct;
-
-  entry.answered=true;
-
-  entry.chosenValue=
-    chosenValue;
-
-  entry.isCorrect=
-    isCorrect;
-
+function selectAnswer(btn,chosenValue){
+  const entry=state.history[state.qPos];
+  if(entry.answered) return;
+  const q=entry.q;
+  const isCorrect = chosenValue===q.correct;
+  entry.answered=true; entry.chosenValue=chosenValue; entry.isCorrect=isCorrect;
 
   state.totalCount++;
-
-
-  if(isCorrect){
-
-    state.totalCorrect++;
-
-  }else{
-
-    state.wrongByType[
-      q.type
-    ]++;
-  }
-
-
+  if(isCorrect){ state.totalCorrect++; }
+  else { state.wrongByType[q.type]++; }
   updateStatusBar();
 
-
-  /*
-    선택지 처리
-  */
-
-  document
-    .querySelectorAll('.choice')
-    .forEach(b=>{
-
-      b.disabled=true;
-
-      if(
-        b.dataset.value===
-        q.correct
-      ){
-        b.classList.add('correct');
-      }
-
-      else if(b===btn){
-
-        b.classList.add('wrong');
-      }
-    });
-
-
-  const fb=
-    document.getElementById('feedback');
-
-  fb.className=
-    'feedback show '+
-    (
-      isCorrect
-      ? 'ok'
-      : 'no'
-    );
-
-
-  const verdict=
-    document.getElementById('verdict');
-
-  verdict.className=
-    'verdict '+
-    (
-      isCorrect
-      ? 'ok'
-      : 'no'
-    );
-
-  verdict.textContent=
-    isCorrect
-    ? '정답입니다.'
-    : '오답입니다.';
-
-
-  document
-    .getElementById('expl')
-    .innerHTML=
-      q.explanation;
-
-
-  document
-    .getElementById('nextBtn')
-    .classList.add('show');
-}
-
-
-/* =========================================================
-   약점 유형
-========================================================= */
-
-function weakestType(){
-
-  let best=null;
-  let bestVal=-1;
-
-  TYPE_KEYS.forEach(k=>{
-
-    if(
-      state.wrongByType[k]>
-      bestVal
-    ){
-
-      bestVal=
-        state.wrongByType[k];
-
-      best=k;
-    }
+  document.querySelectorAll('.choice').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.value===q.correct) b.classList.add('correct');
+    else if(b===btn) b.classList.add('wrong');
   });
 
-  if(bestVal<=0)
-    return choice(TYPE_KEYS);
+  const fb=document.getElementById('feedback');
+  fb.className='feedback show '+(isCorrect?'ok':'no');
+  document.getElementById('verdict').className='verdict '+(isCorrect?'ok':'no');
+  document.getElementById('verdict').textContent = isCorrect ? '정답입니다.' : '오답입니다.';
+  document.getElementById('expl').innerHTML = q.explanation;
+  document.getElementById('nextBtn').classList.add('show');
+}
 
+function weakestType(){
+  let best=null,bestVal=-1;
+  TYPE_KEYS.forEach(k=>{ if(state.wrongByType[k]>bestVal){bestVal=state.wrongByType[k]; best=k;} });
+  if(bestVal<=0) return choice(TYPE_KEYS);
   return best;
 }
-
-
-function resetWrongCounts(){
-
-  TYPE_KEYS.forEach(
-    k=>{
-      state.wrongByType[k]=0;
-    }
-  );
-}
-
-
-/* =========================================================
-   결과
-========================================================= */
+function resetWrongCounts(){ TYPE_KEYS.forEach(k=>state.wrongByType[k]=0); }
 
 function showRoundResult(){
-
-  const card=
-    document.getElementById('card');
-
-  const roundCorrect=
-    state.history.filter(
-      h=>h.isCorrect
-    ).length;
-
-
+  const card=document.getElementById('card');
+  const roundCorrect = state.history.filter(h=>h.isCorrect).length;
   if(state.mode==='normal'){
-
     state.setsCompleted++;
-
-    const isMilestone=
-      state.setsCompleted%3===0;
-
-    const nextLabel=
-      isMilestone
-      ? '약점 클리닉 5문제 풀기'
-      : '다음 세트 시작';
-
+    const isMilestone = state.setsCompleted%3===0;
+    const nextLabel = isMilestone ? '약점 클리닉 5문제 풀기' : '다음 세트 시작';
     let weak=null;
-
-    if(isMilestone){
-
-      weak=
-        weakestType();
-    }
-
-
+    if(isMilestone){ weak=weakestType(); }
     card.innerHTML=`
-
       <div class="resultWrap">
-
-        <div class="lbl">
-          세트 ${state.setsCompleted} 결과
-        </div>
-
-        <div class="big">
-          ${roundCorrect}
-          /
-          ${state.roundLength}
-        </div>
-
-        <div class="lbl">
-          정답
-        </div>
-
-        ${
-          isMilestone
-          ?
-          `
-          <div class="badge">
-
-            3세트 완료!
-
-            가장 많이 틀린 유형
-            <strong>
-              "${TYPE_NAMES[weak]}"
-            </strong>
-            을 모아
-            5문제를 더 풀어봐요.
-
-          </div>
-          `
-          :
-          ''
-        }
-
+        <div class="lbl">세트 ${state.setsCompleted} 결과</div>
+        <div class="big">${roundCorrect} / ${state.roundLength}</div>
+        <div class="lbl">정답</div>
+        ${isMilestone ? `<div class="badge">3세트 완료! 가장 많이 틀린 유형 &ldquo;${TYPE_NAMES[weak]}&rdquo;만 모아 5문제를 더 풀어봐요.</div>` : ''}
         <div class="breakdown">
-
-          ${
-            TYPE_KEYS.map(
-              k=>`
-
-              <div class="row">
-
-                <span>
-                  ${TYPE_NAMES[k]}
-                  오답 수
-                </span>
-
-                <b>
-                  ${state.wrongByType[k]}
-                </b>
-
-              </div>
-
-              `
-            ).join('')
-          }
-
+          ${TYPE_KEYS.map(k=>`<div class="row"><span>${TYPE_NAMES[k]} 오답 수</span><b>${state.wrongByType[k]}</b></div>`).join('')}
         </div>
-
       </div>
-
-
-      <div class="actions">
-
-        <button
-          class="next show"
-          id="nextBtn">
-
-          ${nextLabel}
-
-        </button>
-
-      </div>
-    `;
-
-
-    document
-      .getElementById('nextBtn')
-      .onclick=()=>{
-
-        if(isMilestone){
-
-          const w=weak;
-
-          resetWrongCounts();
-
-          startWeakRound(w);
-
-        }else{
-
-          startNormalSet();
-        }
-      };
-
-  }
-
-
-  else{
-
+      <div class="actions"><button class="next show" id="nextBtn">${nextLabel}</button></div>`;
+    document.getElementById('nextBtn').onclick=()=>{
+      if(isMilestone){ const w=weak; resetWrongCounts(); startWeakRound(w); }
+      else { startNormalSet(); }
+    };
+  } else {
     card.innerHTML=`
-
       <div class="resultWrap">
-
-        <div class="lbl">
-          약점 클리닉 결과
-          ·
-          ${TYPE_NAMES[state.weakType]}
-        </div>
-
-        <div class="big">
-
-          ${roundCorrect}
-          /
-          ${state.roundLength}
-
-        </div>
-
-        <div class="lbl">
-          정답
-        </div>
-
+        <div class="lbl">약점 클리닉 결과 · ${TYPE_NAMES[state.weakType]}</div>
+        <div class="big">${roundCorrect} / ${state.roundLength}</div>
+        <div class="lbl">정답</div>
       </div>
-
-      <div class="actions">
-
-        <button
-          class="next show"
-          id="nextBtn">
-
-          다음 세트 계속하기
-
-        </button>
-
-      </div>
-    `;
-
-
-    document
-      .getElementById('nextBtn')
-      .onclick=()=>{
-        startNormalSet();
-      };
+      <div class="actions"><button class="next show" id="nextBtn">다음 세트 계속하기</button></div>`;
+    document.getElementById('nextBtn').onclick=()=>startNormalSet();
   }
-
-
-  /*
-    결과 화면에서도 메모장 초기화
-  */
-
-  if(window.clearNotepad)
-    window.clearNotepad();
-
+  if(window.clearNotepad) window.clearNotepad();
   updateStatusBar();
 }
 
+function showDifficultyScreen(){
+  const card=document.getElementById('card');
+  card.innerHTML=`
+    <div class="resultWrap">
+      <div class="lbl">시작하기 전에 난이도를 선택하세요</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;">
+        <button class="toolbtn diffBtn" data-d="하" style="padding:14px 26px;font-size:16px;">하</button>
+        <button class="toolbtn diffBtn" data-d="중" style="padding:14px 26px;font-size:16px;">중</button>
+        <button class="toolbtn diffBtn" data-d="상" style="padding:14px 26px;font-size:16px;">상</button>
+      </div>
+      <div class="lbl" style="margin-top:16px;font-size:12px;line-height:1.6;">
+        하: 작은 숫자 · 단순한 반응만 나옵니다<br>
+        중: 표준 난이도 (숫자·유형이 조금 더 다양해짐)<br>
+        상: 큰 숫자 · 복잡한 반응식 · 고체/액체가 섞여 헷갈리기 쉬운 문제 포함
+      </div>
+    </div>`;
+  document.querySelectorAll('.diffBtn').forEach(b=>{
+    b.onclick=()=>{
+      DIFFICULTY=b.dataset.d;
+      state.setsCompleted=0; state.totalCorrect=0; state.totalCount=0;
+      resetWrongCounts();
+      startNormalSet();
+    };
+  });
+  document.getElementById('roundLabel').textContent='난이도 선택 중';
+}
+document.getElementById('changeDiffLink').addEventListener('click', e=>{
+  e.preventDefault();
+  showDifficultyScreen();
+});
 
-/* =========================================================
-   시작
-========================================================= */
-
-startNormalSet();
-
+showDifficultyScreen();
 </script>
-
 </body>
 </html>
