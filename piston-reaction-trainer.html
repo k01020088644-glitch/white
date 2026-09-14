@@ -3,38 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>화학 반응식 트레이너</title>
+<title>화학 트레이너</title>
 <style>
   :root{
-    --paper:#EEF2ED; --paper2:#E4EAE3; --ink:#1B2A23; --inkfade:#5B6B61;
-    --blue:#2A5C8A; --red:#B4483F; --line:#C7D0C8;
-    --good:#3F7D5C; --bad:#A23B3B; --accent:#C98A2B; --wall:#8B958E;
+    --bg:#F1F2F6; --card:#FFFFFF; --ink:#20232B; --inkfade:#8A8FA3;
+    --blue:#3E6E9C; --red:#C0564C;
+    --line:#ECEDF2; --good:#12A66B; --bad:#E5484D;
+    --accentA:#6C5CE7; --accentB:#4834D4; --wall:#8B958E;
+    --shadow: 0 4px 18px rgba(30,30,60,0.07);
   }
   *{box-sizing:border-box;}
   body{
     margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Pretendard,sans-serif;
-    background:
-      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(120,140,125,0.08) 28px),
-      repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(120,140,125,0.08) 28px),
-      var(--paper);
-    color:var(--ink); min-height:100vh; padding:18px 12px 40px;
+    background:var(--bg); color:var(--ink); min-height:100vh; padding:18px 12px 40px;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:900px;margin:0 auto;}
-  .layout{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;}
-  .layout .card{flex:1 1 340px;margin-top:0;}
-  .layout .notewrap{flex:1 1 280px;margin-top:0;position:sticky;top:10px;}
-  @media (max-width:680px){
-    .layout{flex-direction:column;}
-    .layout .notewrap{position:static;width:100%;}
-  }
-  h1{font-family:Georgia,"Iowan Old Style",serif;font-size:24px;font-weight:600;margin:0 0 4px;letter-spacing:-0.01em;}
-  .sub{color:var(--inkfade);font-size:13.5px;margin:0;line-height:1.5;}
+  .wrap{max-width:920px;margin:0 auto;}
+  h1{font-size:22px;font-weight:800;margin:0 0 2px;letter-spacing:-0.02em;}
+  .sub{color:var(--inkfade);font-size:13px;margin:0;line-height:1.5;}
   .statusbar{
-    display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;
-    margin-top:14px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--inkfade);
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+    margin-top:14px;font-size:12.5px;color:var(--inkfade);
   }
   .statusbar b{color:var(--ink);font-size:14px;}
-  .card{background:#fff;border:1px solid var(--line);border-radius:4px;padding:20px 18px 22px;margin-top:14px;}
+  .progressTrack{height:8px;border-radius:20px;background:#E4E5EE;overflow:hidden;margin-top:8px;}
+  .progressFill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accentA),var(--accentB));transition:width .25s ease;}
+  .layout{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:14px;}
+  .card{flex:1 1 340px;background:var(--card);border-radius:22px;box-shadow:var(--shadow);padding:22px 20px 24px;margin-top:0;}
+  .notewrap{flex:1 1 280px;margin-top:0;position:sticky;top:10px;background:var(--card);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+  @media (max-width:680px){ .layout{flex-direction:column;} .notewrap{position:static;width:100%;} }
+
+  .noteHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);}
+  .noteHeader .title{font-size:12.5px;color:var(--inkfade);font-weight:700;}
+  .noteToolbar{display:flex;align-items:center;gap:8px;}
+  .swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
+  .swatch.active{border-color:var(--accentA);box-shadow:0 0 0 2px #fff inset;}
+  .toolbtn{border:none;background:#F1F2F6;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .toolbtn.active{background:linear-gradient(90deg,var(--accentA),var(--accentB));color:#fff;}
+  .toolbtn.clear{color:var(--bad);background:#FDECEC;}
+  #noteCanvas{display:block;width:100%;height:420px;touch-action:none;background:
+      repeating-linear-gradient(0deg, transparent, transparent 25px, rgba(120,140,125,0.12) 26px),
+      #FCFCFD;}
+
   .prompt{font-size:15px;line-height:1.65;margin:0 0 14px;}
   .prompt .eq{display:block;margin-top:8px;font-family:Georgia,serif;font-size:16px;color:var(--blue);}
   .stmt{margin:4px 0;padding-left:2px;}
@@ -49,70 +59,69 @@
   .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
   .dotA{background:var(--blue);} .dotB{background:var(--red);}
   .boxrow{display:flex;align-items:center;justify-content:center;gap:14px;margin:14px 0;flex-wrap:wrap;}
-  .box{border:1.5px solid var(--wall);border-radius:4px;padding:12px 16px;min-width:120px;text-align:center;font-size:14px;background:var(--paper2);}
+  .box{border-radius:14px;padding:12px 16px;min-width:120px;text-align:center;font-size:14px;background:#F6F5FF;}
   .box .t{font-size:11.5px;color:var(--inkfade);margin-bottom:6px;}
-  .question{font-size:15px;font-weight:600;margin:16px 0 12px;}
-  .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+  .question{font-size:15px;font-weight:700;margin:16px 0 12px;}
+  .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
   @media (max-width:400px){.choices{grid-template-columns:1fr 1fr;}}
-  .choice{border:1.5px solid var(--line);background:var(--paper2);border-radius:4px;padding:11px 8px;font-size:14.5px;font-family:Georgia,serif;text-align:center;cursor:pointer;transition:border-color .12s,background .12s;}
-  .choice:hover:not(:disabled){border-color:var(--blue);}
+  .choice{border:none;background:#F5F6FA;border-radius:16px;padding:13px 8px;font-size:14.5px;font-weight:600;text-align:center;cursor:pointer;transition:transform .08s ease, background .12s;}
+  .choice:active:not(:disabled){transform:scale(0.97);}
   .choice:disabled{cursor:default;}
-  .choice.correct{background:#E4F0E9;border-color:var(--good);color:var(--good);}
-  .choice.wrong{background:#F5E6E4;border-color:var(--bad);color:var(--bad);}
-  .feedback{margin-top:16px;padding:13px 14px;border-radius:4px;font-size:13.8px;line-height:1.65;display:none;}
+  .choice.correct{background:#E4F8EF;color:var(--good);box-shadow:inset 0 0 0 2px var(--good);}
+  .choice.wrong{background:#FCEBEC;color:var(--bad);box-shadow:inset 0 0 0 2px var(--bad);}
+  .feedback{margin-top:16px;padding:14px 16px;border-radius:16px;font-size:13.8px;line-height:1.65;display:none;}
   .feedback.show{display:block;}
-  .feedback.ok{background:#E4F0E9;border:1px solid var(--good);}
-  .feedback.no{background:#F5E6E4;border:1px solid var(--bad);}
-  .feedback .verdict{font-weight:700;margin-bottom:6px;}
+  .feedback.ok{background:#E4F8EF;}
+  .feedback.no{background:#FCEBEC;}
+  .feedback .verdict{font-weight:800;margin-bottom:6px;}
   .feedback .verdict.ok{color:var(--good);} .feedback .verdict.no{color:var(--bad);}
   .expl div{margin-bottom:3px;}
-  .actions{margin-top:18px;display:flex;justify-content:flex-end;}
-  button.next{background:var(--accent);color:#fff;border:none;border-radius:4px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;display:none;}
-  button.next.show{display:inline-block;}
-  button.next:hover{opacity:0.9;}
-  .typeTag{display:inline-block;font-size:11px;color:var(--inkfade);border:1px solid var(--line);border-radius:20px;padding:2px 10px;margin-bottom:10px;}
-  .resultWrap{text-align:center;padding:20px 6px;}
-  .resultWrap .big{font-family:Georgia,serif;font-size:42px;color:var(--blue);margin:6px 0 2px;}
+  .actions{margin-top:18px;display:flex;justify-content:space-between;gap:10px;}
+  .btn{border:none;border-radius:16px;padding:13px 20px;font-size:14px;font-weight:700;cursor:pointer;}
+  .btn.primary{background:linear-gradient(90deg,var(--accentA),var(--accentB));color:#fff;display:none;}
+  .btn.primary.show{display:inline-block;}
+  .btn.ghost{background:#F1F2F6;color:var(--ink);}
+  .typeTag{display:inline-block;font-size:11px;color:#fff;background:linear-gradient(90deg,var(--accentA),var(--accentB));border-radius:20px;padding:4px 12px;margin-bottom:10px;font-weight:700;}
+  .resultWrap{text-align:center;padding:14px 6px;}
+  .resultWrap .big{font-size:46px;font-weight:800;background:linear-gradient(90deg,var(--accentA),var(--accentB));-webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 2px;}
   .resultWrap .lbl{font-size:14px;color:var(--inkfade);}
-  .resultWrap .badge{margin-top:14px;font-size:13px;color:var(--accent);font-weight:600;}
+  .resultWrap .badge{margin-top:14px;font-size:13px;color:var(--accentB);font-weight:700;}
   .breakdown{margin-top:18px;text-align:left;font-size:13px;border-top:1px solid var(--line);padding-top:14px;}
-  .breakdown .row{display:flex;justify-content:space-between;padding:4px 0;color:var(--inkfade);}
+  .breakdown .row{display:flex;justify-content:space-between;padding:5px 0;color:var(--inkfade);}
   .breakdown .row b{color:var(--ink);}
 
-  .notewrap{background:#fff;border:1px solid var(--line);border-radius:4px;margin-top:14px;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
-  .noteHeader{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line);}
-  .noteHeader .title{font-size:12.5px;color:var(--inkfade);font-weight:600;}
-  .noteToolbar{display:flex;align-items:center;gap:8px;}
-  .swatch{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;}
-  .swatch.active{border-color:var(--accent);box-shadow:0 0 0 2px #fff inset;}
-  .toolbtn{border:1px solid var(--line);background:var(--paper2);border-radius:4px;padding:5px 10px;font-size:12px;color:var(--ink);cursor:pointer;}
-  .toolbtn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
-  .toolbtn.clear{color:var(--bad);border-color:var(--bad);background:#fff;}
-  #noteCanvas{display:block;width:100%;height:420px;touch-action:none;background:
-      repeating-linear-gradient(0deg, transparent, transparent 25px, rgba(120,140,125,0.15) 26px),
-      #FBFCFA;}
+  .choiceCard{
+    display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;box-shadow:var(--shadow);
+    padding:18px 18px;cursor:pointer;margin-bottom:12px;transition:transform .08s;
+  }
+  .choiceCard:active{transform:scale(0.98);}
+  .choiceCard .emoji{font-size:28px;}
+  .choiceCard .txt .h{font-size:15.5px;font-weight:800;margin-bottom:2px;}
+  .choiceCard .txt .d{font-size:12.5px;color:var(--inkfade);}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>화학 반응식 트레이너</h1>
-    <p class="sub">기체 반응 몰비, 계수비, 참/거짓 판별, 한정 반응물 문제를 10문제 세트로 연습합니다.</p>
+    <h1>🧪 화학 트레이너</h1>
+    <p class="sub">문제 유형을 골라 10문제 세트로 연습하고, 3세트마다 약점만 모아 복습해요.</p>
     <div class="statusbar">
-      <span id="roundLabel">난이도 선택 중</span>
-      <span>누적 정답 <b id="cumStat">0/0</b> · <a href="#" id="changeDiffLink" style="color:var(--accent);text-decoration:none;">난이도 변경</a></span>
+      <span id="roundLabel">모드 선택 중</span>
+      <span>누적 정답 <b id="cumStat">0/0</b> · <a href="#" id="changeDiffLink" style="color:var(--accentB);text-decoration:none;font-weight:700;">모드 변경</a></span>
     </div>
+    <div class="progressTrack"><div class="progressFill" id="progressFill" style="width:0%;"></div></div>
   </header>
+
   <div class="layout">
     <div class="card" id="card"></div>
 
     <div class="notewrap">
       <div class="noteHeader">
-        <span class="title">메모장 (Apple Pencil로 필기)</span>
+        <span class="title">✏️ 메모장</span>
         <div class="noteToolbar">
-          <button class="swatch active" data-color="#1B2A23" style="background:#1B2A23" title="검정"></button>
-          <button class="swatch" data-color="#B4483F" style="background:#B4483F" title="빨강"></button>
-          <button class="swatch" data-color="#2A5C8A" style="background:#2A5C8A" title="파랑"></button>
+          <button class="swatch active" data-color="#20232B" style="background:#20232B" title="검정"></button>
+          <button class="swatch" data-color="#C0564C" style="background:#C0564C" title="빨강"></button>
+          <button class="swatch" data-color="#3E6E9C" style="background:#3E6E9C" title="파랑"></button>
           <button class="toolbtn" id="eraserBtn">지우개</button>
           <button class="toolbtn clear" id="clearNoteBtn">전체 지우기</button>
         </div>
@@ -123,7 +132,7 @@
 </div>
 
 <script>
-const BLUE = '#2A5C8A', RED = '#B4483F', WALL = '#8B958E';
+const BLUE = '#3E6E9C', RED = '#C0564C', WALL = '#8B958E';
 
 // ---------- utils ----------
 function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
@@ -134,16 +143,19 @@ function subscript(s){return s.replace(/(\d+)/g,'<sub>$1</sub>');}
 function uniq(arr){return [...new Set(arr)];}
 
 let DIFFICULTY='중';
+let APP_MODE='generated'; // 'generated' | 'exam'
 const ALLOWED_LEVELS={'하':[1],'중':[1,2],'상':[1,2,3]};
 
 // ============================================================
-// TYPE 1: piston mole-ratio -> formula of X
+// MODE 1 ("문제"): procedurally generated stoichiometry problems
 // ============================================================
+
+// ---- TYPE: piston mole-ratio -> formula of X ----
 const PISTON_TEMPLATES=[{name:'AB2',p0:2,q0:1,r0:2,m:1,n:2},{name:'AB3',p0:1,q0:1,r0:1,m:1,n:3}];
 const ALL_FORMULAS=[{label:'AB',m:1,n:1},{label:'AB2',m:1,n:2},{label:'AB3',m:1,n:3},{label:'A2B',m:2,n:1},{label:'A3B',m:3,n:1}];
 function formulaText(m,n){return 'A'+(m>1?m:'')+'B'+(n>1?n:'');}
 
-const FRAME_H=240, WALL_TOP=8, WALL_BOTTOM=224, WALL_LEFT=14, WALL_RIGHT=176, UNIT_PX=22, MIN_GAS=46;
+const WALL_TOP=8, WALL_BOTTOM=224, WALL_LEFT=14, WALL_RIGHT=176, UNIT_PX=22, MIN_GAS=46;
 const MAX_GAS = WALL_BOTTOM-WALL_TOP-12;
 function gasHeightFor(total){return Math.max(MIN_GAS,Math.min(MAX_GAS,total*UNIT_PX));}
 function placePositions(count,xmin,xmax,ymin,ymax,minDist){
@@ -237,9 +249,7 @@ function genPiston(){
   return {promptHTML, choices, correct: correctLabel, explanation};
 }
 
-// ============================================================
-// TYPE 2: coefficient-sum ratio
-// ============================================================
+// ---- TYPE: coefficient-sum ratio ----
 const REACTION_BANK=[
   {eq:'C\u2083H\u2088 + 5O\u2082 \u2192 3CO\u2082 + 4H\u2082O', reactants:[1,5], products:[3,4], level:2},
   {eq:'CH\u2084 + 2O\u2082 \u2192 CO\u2082 + 2H\u2082O', reactants:[1,2], products:[1,2], level:1},
@@ -276,9 +286,7 @@ function genCoef(){
   return {promptHTML, choices, correct, explanation};
 }
 
-// ============================================================
-// TYPE 3: mol-decrease true/false selection
-// ============================================================
+// ---- TYPE: mol-decrease true/false selection ----
 const MOL_REACTIONS=[
   {label:'H\u2082(g) + Cl\u2082(g) \u2192 2HCl(g)', before:2, after:2, level:1},
   {label:'N\u2082(g) + 3H\u2082(g) \u2192 2NH\u2083(g)', before:4, after:2, level:1},
@@ -296,12 +304,9 @@ function genDecrease(){
   const picked = shuffle([...Array(pool.length).keys()]).slice(0,3);
   const items = picked.map(i=>pool[i]);
   const correctIdx = [0,1,2].filter(i=>items[i].after<items[i].before);
-  const correctKey = correctIdx.join(',');
-  // build all non-empty + empty subsets of {0,1,2}
   const subsets=[[],[0],[1],[2],[0,1],[0,2],[1,2],[0,1,2]];
   const correctLabel = comboLabel(correctIdx);
-  let comboPool = subsets.map(s=>comboLabel(s));
-  comboPool = uniq(comboPool);
+  let comboPool = uniq(subsets.map(s=>comboLabel(s)));
   const others = shuffle(comboPool.filter(l=>l!==correctLabel)).slice(0,4);
   const choices = shuffle([correctLabel, ...others]).map(v=>({html:v, value:v}));
   const stmtHTML = items.map((it,i)=>`<div class="stmt"><b>${HANGUL[i]}.</b> ${it.label}</div>`).join('');
@@ -317,9 +322,7 @@ function genDecrease(){
   return {promptHTML, choices, correct: correctLabel, explanation};
 }
 
-// ============================================================
-// TYPE 4: limiting reactant container
-// ============================================================
+// ---- TYPE: limiting reactant container ----
 const LIMIT_TEMPLATES=[
   {a:3,b:1,c:2, eq:'3A(g) + B(g) \u2192 2C(g)', level:2},
   {a:2,b:1,c:2, eq:'2A(g) + B(g) \u2192 2C(g)', level:1},
@@ -385,6 +388,102 @@ function genLimiting(){
   return {promptHTML, choices, correct:String(correctVal), explanation};
 }
 
+const GEN_TYPE_KEYS=['piston','coef','decrease','limiting'];
+const GEN_GENERATORS={piston:genPiston, coef:genCoef, decrease:genDecrease, limiting:genLimiting};
+const GEN_TYPE_NAMES={piston:'피스톤 몰비 모형', coef:'반응식 계수비', decrease:'몰 변화 판별', limiting:'한정 반응물'};
+
+// ============================================================
+// MODE 2 ("시험문제 바탕"): questions inspired by the uploaded exam
+// (분자 구조 / 극성 / 전기음성도 / 루이스 구조 / 옥텟 규칙 / 결합)
+// ============================================================
+const EXAM_BANK=[
+  {category:'electroneg', level:1,
+   prompt:'다음 원자 중 전기음성도가 가장 큰 것은?',
+   choicesRaw:[{text:'F',correct:true},{text:'O'},{text:'N'},{text:'C'},{text:'Na'}],
+   explanation:'<div>전기음성도는 원자가 공유 전자쌍을 끌어당기는 능력으로, 2주기 원소 중에서는 F(플루오린)가 가장 큽니다.</div><div>일반적인 크기 순서: F > O > N > C > Na</div>'},
+  {category:'electroneg', level:1,
+   prompt:'다음 원자 중 전기음성도가 가장 작은 것은?',
+   choicesRaw:[{text:'Na',correct:true},{text:'Mg'},{text:'Al'},{text:'Si'},{text:'Cl'}],
+   explanation:'<div>같은 주기에서는 원자 번호가 커질수록(오른쪽으로 갈수록) 전기음성도가 대체로 커집니다.</div><div>Na이 이 중 가장 왼쪽(금속성이 강한) 원소이므로 전기음성도가 가장 작습니다.</div>'},
+  {category:'polarity', level:1,
+   prompt:'다음 분자 중 무극성 분자인 것은?',
+   choicesRaw:[{text:'CO2',correct:true},{text:'H2O'},{text:'NH3'},{text:'HCl'},{text:'HF'}],
+   explanation:'<div>CO2는 직선형 구조로 두 C=O 결합의 쌍극자가 서로 반대 방향으로 상쇄되어 분자 전체의 쌍극자 모멘트가 0인 무극성 분자입니다.</div><div>나머지는 모두 결합의 쌍극자가 상쇄되지 않는 극성 분자입니다.</div>'},
+  {category:'polarity', level:2,
+   prompt:'다음 분자 중 극성 분자인 것은?',
+   choicesRaw:[{text:'NH3',correct:true},{text:'CH4'},{text:'CO2'},{text:'BF3'},{text:'CCl4'}],
+   explanation:'<div>NH3는 삼각뿔형 구조로 비공유 전자쌍 때문에 대칭을 이루지 못해 쌍극자 모멘트가 0이 아닌 극성 분자입니다.</div><div>CH4(정사면체), CO2(직선형), BF3(평면 삼각형), CCl4(정사면체)는 모두 대칭 구조라 무극성입니다.</div>'},
+  {category:'shape', level:1,
+   prompt:'다음 중 평면 삼각형 구조인 분자는?',
+   choicesRaw:[{text:'BF3',correct:true},{text:'NH3'},{text:'H2O'},{text:'CH4'},{text:'CO2'}],
+   explanation:'<div>BF3은 중심 원자 B 주위에 비공유 전자쌍 없이 3개의 원자가 결합하여 평면 삼각형 구조를 이룹니다.</div><div>NH3는 삼각뿔형, H2O는 굽은형, CH4는 정사면체, CO2는 직선형입니다.</div>'},
+  {category:'shape', level:1,
+   prompt:'다음 중 굽은 형(bent) 구조인 분자는?',
+   choicesRaw:[{text:'H2O',correct:true},{text:'BeCl2'},{text:'CO2'},{text:'BF3'},{text:'CH4'}],
+   explanation:'<div>H2O는 산소에 비공유 전자쌍이 2개 있어 굽은 형(V자형) 구조를 가집니다.</div><div>BeCl2와 CO2는 직선형, BF3은 평면 삼각형, CH4는 정사면체입니다.</div>'},
+  {category:'shape', level:2,
+   prompt:'다음 중 분자 모양이 정사면체인 것은?',
+   choicesRaw:[{text:'CH4',correct:true},{text:'NH3'},{text:'H2O'},{text:'BF3'},{text:'CO2'}],
+   explanation:'<div>CH4은 중심 원자에 비공유 전자쌍이 없고 4개의 원자가 결합하여 정사면체 구조를 가집니다.</div><div>NH3는 전자쌍 배치는 사면체형에 가깝지만 비공유 전자쌍 때문에 분자 모양은 삼각뿔형입니다.</div>'},
+  {category:'lewis', level:3,
+   prompt:'다음 중 옥텟 규칙을 만족하는 분자는?',
+   choicesRaw:[{text:'CH4',correct:true},{text:'BeCl2'},{text:'BF3'},{text:'PCl5'},{text:'SF6'}],
+   explanation:'<div>CH4의 C는 최외각에 8개의 전자(공유 전자 4쌍)를 가져 옥텟 규칙을 만족합니다.</div><div>BeCl2와 BF3은 중심 원자의 전자가 8개보다 적은 옥텟 규칙의 예외(전자 부족)이고, PCl5와 SF6은 8개보다 많은 확장 옥텟의 예외입니다.</div>'},
+  {category:'lewis', level:1,
+   prompt:'NH3 분자에서 질소(N) 원자의 비공유 전자쌍 수는?',
+   choicesRaw:[{text:'1',correct:true},{text:'0'},{text:'2'},{text:'3'},{text:'4'}],
+   explanation:'<div>N은 원자가 전자 5개 중 3개를 H와 공유 결합(3쌍)에 사용하고, 나머지 2개(1쌍)는 비공유 전자쌍으로 남습니다.</div>'},
+  {category:'lewis', level:1,
+   prompt:'H2O 분자에서 산소(O) 원자의 비공유 전자쌍 수는?',
+   choicesRaw:[{text:'2',correct:true},{text:'0'},{text:'1'},{text:'3'},{text:'4'}],
+   explanation:'<div>O는 원자가 전자 6개 중 2개를 H와 공유 결합(2쌍)에 사용하고, 나머지 4개(2쌍)는 비공유 전자쌍으로 남습니다.</div>'},
+  {category:'lewis', level:2,
+   prompt:'CO2 분자에서 탄소(C)와 산소(O) 사이의 결합은 각각 몇 중 결합인가?',
+   choicesRaw:[{text:'2중 결합',correct:true},{text:'1중 결합'},{text:'3중 결합'},{text:'결합 없음'},{text:'이온 결합'}],
+   explanation:'<div>CO2는 O=C=O 구조로, 탄소와 각 산소 사이에 2중 결합(이중 결합)이 하나씩 존재합니다.</div>'},
+  {category:'bonding', level:1,
+   prompt:'다음 중 무극성 공유 결합이 존재하는 물질은?',
+   choicesRaw:[{text:'H2',correct:true},{text:'HCl'},{text:'H2O'},{text:'NH3'},{text:'CO2'}],
+   explanation:'<div>H2는 같은 종류의 원자(H-H) 사이의 결합이므로 전자를 동등하게 공유하는 무극성 공유 결합입니다.</div><div>나머지는 서로 다른 원자 사이의 결합으로, 전기음성도 차이 때문에 극성 공유 결합을 가집니다.</div>'},
+  {category:'bonding', level:1,
+   prompt:'다음 중 다중 결합(2중 또는 3중 결합)을 포함하는 분자는?',
+   choicesRaw:[{text:'N2',correct:true},{text:'H2O'},{text:'NH3'},{text:'CH4'},{text:'HCl'}],
+   explanation:'<div>N2는 두 질소 원자 사이에 3중 결합(삼중 결합)을 가지고 있습니다.</div><div>나머지는 모두 단일 결합으로만 이루어져 있습니다.</div>'},
+  {category:'bonding', level:1,
+   prompt:'다음 중 이온 결합으로 이루어진 물질은?',
+   choicesRaw:[{text:'NaCl',correct:true},{text:'H2O'},{text:'CO2'},{text:'NH3'},{text:'CH4'}],
+   explanation:'<div>NaCl은 금속(Na)과 비금속(Cl) 원소 사이에서 전자가 이동하여 형성된 이온 결합 물질입니다.</div><div>나머지는 모두 비금속 원자 사이의 공유 결합으로 이루어진 분자입니다.</div>'},
+];
+const EXAM_CATEGORIES=['electroneg','polarity','shape','lewis','bonding'];
+const EXAM_TYPE_NAMES={electroneg:'전기음성도', polarity:'분자의 극성', shape:'분자 모양(VSEPR)', lewis:'루이스 구조·옥텟 규칙', bonding:'화학 결합의 종류'};
+function buildExamQuestion(item){
+  const opts=shuffle(item.choicesRaw);
+  const correctText=item.choicesRaw.find(c=>c.correct).text;
+  const choices=opts.map(o=>({html:subscript(o.text), value:o.text}));
+  const promptHTML=`
+    <span class="typeTag">${EXAM_TYPE_NAMES[item.category]}</span>
+    <p class="prompt">${item.prompt}</p>
+    <p class="question">정답을 고르세요.</p>`;
+  return {promptHTML, choices, correct:correctText, explanation:item.explanation};
+}
+function genExamCategory(cat){
+  return function(){
+    const pool = EXAM_BANK.filter(it=>it.category===cat && ALLOWED_LEVELS[DIFFICULTY].includes(it.level));
+    const item = choice(pool.length?pool:EXAM_BANK.filter(it=>it.category===cat));
+    return buildExamQuestion(item);
+  };
+}
+const EXAM_GENERATORS={}; EXAM_CATEGORIES.forEach(c=>EXAM_GENERATORS[c]=genExamCategory(c));
+
+// ============================================================
+// active mode pointers (switched by activateMode())
+// ============================================================
+let TYPE_KEYS=GEN_TYPE_KEYS, GENERATORS=GEN_GENERATORS, TYPE_NAMES=GEN_TYPE_NAMES;
+function activateMode(){
+  if(APP_MODE==='exam'){ TYPE_KEYS=EXAM_CATEGORIES; GENERATORS=EXAM_GENERATORS; TYPE_NAMES=EXAM_TYPE_NAMES; }
+  else { TYPE_KEYS=GEN_TYPE_KEYS; GENERATORS=GEN_GENERATORS; TYPE_NAMES=GEN_TYPE_NAMES; }
+}
+
 // ============================================================
 // scratchpad (Apple Pencil / touch / mouse drawing)
 // ============================================================
@@ -395,7 +494,7 @@ function genLimiting(){
   let strokes = [];
   let currentStroke = null;
   let drawing = false;
-  let currentColor = '#1B2A23';
+  let currentColor = '#20232B';
   let eraserOn = false;
 
   canvas.addEventListener('contextmenu', e=>e.preventDefault());
@@ -410,18 +509,11 @@ function genLimiting(){
     ctx.setTransform(dpr,0,0,dpr,0,0);
     redrawAll(rect.width);
   }
-
   function getPoint(e){
     const rect = canvas.getBoundingClientRect();
-    return {
-      xf: (e.clientX - rect.left) / rect.width,
-      y: (e.clientY - rect.top),
-      pressure: (e.pressure && e.pressure > 0) ? e.pressure : 0.5
-    };
+    return { xf:(e.clientX-rect.left)/rect.width, y:(e.clientY-rect.top) };
   }
-
   function widthFor(s){ return s.eraser ? 22 : 2.4; }
-
   function drawStrokeSegment(s, widthPx, p0, p1, cssWidth){
     ctx.lineJoin='round'; ctx.lineCap='round';
     ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
@@ -432,19 +524,15 @@ function genLimiting(){
     ctx.lineTo(p1.xf*cssWidth, p1.y);
     ctx.stroke();
   }
-
   function redrawAll(cssWidth){
     cssWidth = cssWidth || canvas.getBoundingClientRect().width;
     ctx.clearRect(0,0,cssWidth,NOTE_HEIGHT);
     strokes.forEach(s=>{
       const w = widthFor(s);
-      for(let i=1;i<s.points.length;i++){
-        drawStrokeSegment(s, w, s.points[i-1], s.points[i], cssWidth);
-      }
+      for(let i=1;i<s.points.length;i++) drawStrokeSegment(s, w, s.points[i-1], s.points[i], cssWidth);
     });
     ctx.globalCompositeOperation='source-over';
   }
-
   canvas.addEventListener('pointerdown', e=>{
     e.preventDefault();
     canvas.setPointerCapture(e.pointerId);
@@ -479,29 +567,19 @@ function genLimiting(){
     eraserOn = !eraserOn;
     document.getElementById('eraserBtn').classList.toggle('active', eraserOn);
   });
-  document.getElementById('clearNoteBtn').addEventListener('click', ()=>{
-    strokes = [];
-    redrawAll();
-  });
+  document.getElementById('clearNoteBtn').addEventListener('click', ()=>{ strokes=[]; redrawAll(); });
 
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
-
-  window.clearNotepad = function(){ strokes = []; redrawAll(); };
+  window.clearNotepad = function(){ strokes=[]; redrawAll(); };
 })();
 
 // ============================================================
-// controller (history-based, supports 이전/다음 navigation)
+// controller (mode + difficulty select, history-based nav)
 // ============================================================
-const GENERATORS={piston:genPiston, coef:genCoef, decrease:genDecrease, limiting:genLimiting};
-const TYPE_NAMES={piston:'피스톤 몰비 모형', coef:'반응식 계수비', decrease:'몰 변화 판별', limiting:'한정 반응물'};
-const TYPE_KEYS=Object.keys(GENERATORS);
-
 const state={
   setsCompleted:0, totalCorrect:0, totalCount:0,
-  wrongByType:{piston:0,coef:0,decrease:0,limiting:0},
-  mode:'normal', roundLength:10, history:[], qPos:-1,
-  weakType:null,
+  wrongByType:{}, mode:'normal', roundLength:10, history:[], qPos:-1, weakType:null,
 };
 
 function updateStatusBar(){
@@ -511,9 +589,13 @@ function updateStatusBar(){
     : `세트 ${state.setsCompleted+1} · ${posLabel}`;
   document.getElementById('roundLabel').textContent = label;
   document.getElementById('cumStat').textContent = `${state.totalCorrect}/${state.totalCount}`;
+  const pct = state.qPos>=0 ? Math.round(((state.qPos + (state.history[state.qPos]&&state.history[state.qPos].answered?1:0))/state.roundLength)*100) : 0;
+  document.getElementById('progressFill').style.width = pct+'%';
 }
 
 function pickType(){ return state.mode==='weak' ? state.weakType : choice(TYPE_KEYS); }
+
+function resetWrongCounts(){ TYPE_KEYS.forEach(k=>state.wrongByType[k]=0); }
 
 function startNormalSet(){
   state.mode='normal'; state.roundLength=10; state.history=[]; state.qPos=-1;
@@ -551,9 +633,9 @@ function renderQuestionUI(){
       <div class="verdict" id="verdict"></div>
       <div class="expl" id="expl"></div>
     </div>
-    <div class="actions" style="justify-content:space-between;">
-      <button class="next show" id="prevBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);${state.qPos===0?'visibility:hidden;':''}">이전 문제</button>
-      <button class="next" id="nextBtn">${isLast ? '세트 결과 보기' : '다음 문제'}</button>
+    <div class="actions">
+      <button class="btn ghost" id="prevBtn" style="${state.qPos===0?'visibility:hidden;':''}">← 이전 문제</button>
+      <button class="btn primary" id="nextBtn">${isLast ? '세트 결과 보기' : '다음 문제 →'}</button>
     </div>`;
   const choicesEl=document.getElementById('choices');
   q.choices.forEach(c=>{
@@ -596,7 +678,7 @@ function selectAnswer(btn,chosenValue){
 
   state.totalCount++;
   if(isCorrect){ state.totalCorrect++; }
-  else { state.wrongByType[q.type]++; }
+  else { state.wrongByType[q.type]=(state.wrongByType[q.type]||0)+1; }
   updateStatusBar();
 
   document.querySelectorAll('.choice').forEach(b=>{
@@ -615,11 +697,10 @@ function selectAnswer(btn,chosenValue){
 
 function weakestType(){
   let best=null,bestVal=-1;
-  TYPE_KEYS.forEach(k=>{ if(state.wrongByType[k]>bestVal){bestVal=state.wrongByType[k]; best=k;} });
+  TYPE_KEYS.forEach(k=>{ const v=state.wrongByType[k]||0; if(v>bestVal){bestVal=v; best=k;} });
   if(bestVal<=0) return choice(TYPE_KEYS);
   return best;
 }
-function resetWrongCounts(){ TYPE_KEYS.forEach(k=>state.wrongByType[k]=0); }
 
 function showRoundResult(){
   const card=document.getElementById('card');
@@ -637,10 +718,10 @@ function showRoundResult(){
         <div class="lbl">정답</div>
         ${isMilestone ? `<div class="badge">3세트 완료! 가장 많이 틀린 유형 &ldquo;${TYPE_NAMES[weak]}&rdquo;만 모아 5문제를 더 풀어봐요.</div>` : ''}
         <div class="breakdown">
-          ${TYPE_KEYS.map(k=>`<div class="row"><span>${TYPE_NAMES[k]} 오답 수</span><b>${state.wrongByType[k]}</b></div>`).join('')}
+          ${TYPE_KEYS.map(k=>`<div class="row"><span>${TYPE_NAMES[k]} 오답 수</span><b>${state.wrongByType[k]||0}</b></div>`).join('')}
         </div>
       </div>
-      <div class="actions"><button class="next show" id="nextBtn">${nextLabel}</button></div>`;
+      <div class="actions"><button class="btn primary show" id="nextBtn" style="margin-left:auto;">${nextLabel}</button></div>`;
     document.getElementById('nextBtn').onclick=()=>{
       if(isMilestone){ const w=weak; resetWrongCounts(); startWeakRound(w); }
       else { startNormalSet(); }
@@ -652,32 +733,52 @@ function showRoundResult(){
         <div class="big">${roundCorrect} / ${state.roundLength}</div>
         <div class="lbl">정답</div>
       </div>
-      <div class="actions"><button class="next show" id="nextBtn">다음 세트 계속하기</button></div>`;
+      <div class="actions"><button class="btn primary show" id="nextBtn" style="margin-left:auto;">다음 세트 계속하기</button></div>`;
     document.getElementById('nextBtn').onclick=()=>startNormalSet();
   }
   if(window.clearNotepad) window.clearNotepad();
   updateStatusBar();
 }
 
+// ---- onboarding screens ----
+function showModeScreen(){
+  const card=document.getElementById('card');
+  card.innerHTML=`
+    <div class="lbl" style="text-align:center;color:var(--inkfade);font-size:14px;margin-bottom:16px;">어떤 문제로 연습할까요?</div>
+    <div class="choiceCard" id="modeExamBtn">
+      <div class="emoji">📄</div>
+      <div class="txt"><div class="h">시험문제 바탕</div><div class="d">분자 구조·극성·전기음성도·루이스 구조 등 실제 시험 유형</div></div>
+    </div>
+    <div class="choiceCard" id="modeGenBtn">
+      <div class="emoji">🧪</div>
+      <div class="txt"><div class="h">문제</div><div class="d">피스톤 몰비, 계수비, 한정 반응물 등 화학양론 반복 연습</div></div>
+    </div>`;
+  document.getElementById('modeExamBtn').onclick=()=>{ APP_MODE='exam'; showDifficultyScreen(); };
+  document.getElementById('modeGenBtn').onclick=()=>{ APP_MODE='generated'; showDifficultyScreen(); };
+  document.getElementById('roundLabel').textContent='모드 선택 중';
+  document.getElementById('progressFill').style.width='0%';
+}
+
 function showDifficultyScreen(){
   const card=document.getElementById('card');
   card.innerHTML=`
     <div class="resultWrap">
-      <div class="lbl">시작하기 전에 난이도를 선택하세요</div>
+      <div class="lbl">난이도를 선택하세요</div>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap;">
-        <button class="toolbtn diffBtn" data-d="하" style="padding:14px 26px;font-size:16px;">하</button>
-        <button class="toolbtn diffBtn" data-d="중" style="padding:14px 26px;font-size:16px;">중</button>
-        <button class="toolbtn diffBtn" data-d="상" style="padding:14px 26px;font-size:16px;">상</button>
+        <button class="btn ghost diffBtn" data-d="하" style="padding:14px 26px;font-size:16px;">하</button>
+        <button class="btn ghost diffBtn" data-d="중" style="padding:14px 26px;font-size:16px;">중</button>
+        <button class="btn ghost diffBtn" data-d="상" style="padding:14px 26px;font-size:16px;">상</button>
       </div>
       <div class="lbl" style="margin-top:16px;font-size:12px;line-height:1.6;">
-        하: 작은 숫자 · 단순한 반응만 나옵니다<br>
-        중: 표준 난이도 (숫자·유형이 조금 더 다양해짐)<br>
-        상: 큰 숫자 · 복잡한 반응식 · 고체/액체가 섞여 헷갈리기 쉬운 문제 포함
+        하: 작은 숫자 · 단순한 문제만<br>
+        중: 표준 난이도<br>
+        상: 큰 숫자 · 복잡하고 헷갈리기 쉬운 문제 포함
       </div>
     </div>`;
   document.querySelectorAll('.diffBtn').forEach(b=>{
     b.onclick=()=>{
       DIFFICULTY=b.dataset.d;
+      activateMode();
       state.setsCompleted=0; state.totalCorrect=0; state.totalCount=0;
       resetWrongCounts();
       startNormalSet();
@@ -685,12 +786,13 @@ function showDifficultyScreen(){
   });
   document.getElementById('roundLabel').textContent='난이도 선택 중';
 }
+
 document.getElementById('changeDiffLink').addEventListener('click', e=>{
   e.preventDefault();
-  showDifficultyScreen();
+  showModeScreen();
 });
 
-showDifficultyScreen();
+showModeScreen();
 </script>
 </body>
 </html>
