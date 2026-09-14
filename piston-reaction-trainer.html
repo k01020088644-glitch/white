@@ -146,6 +146,24 @@ let DIFFICULTY='중';
 let APP_MODE='generated'; // 'generated' | 'exam'
 const ALLOWED_LEVELS={'하':[1],'중':[1,2],'상':[1,2,3]};
 
+function numericDistractors(correct, count, min){
+  min = (min===undefined)?0:min;
+  const offsets=[-2,-1,1,2,3,-3,4,-4,5,-5,6,-6,7,-7];
+  const set=new Set();
+  for(const o of offsets){
+    if(set.size>=count) break;
+    const v=correct+o;
+    if(v>=min && v!==correct) set.add(v);
+  }
+  let extra=1;
+  while(set.size<count){
+    const v=correct+count*10+extra;
+    if(v>=min && v!==correct) set.add(v);
+    extra++;
+  }
+  return [...set];
+}
+
 // ============================================================
 // MODE 1 ("문제"): procedurally generated stoichiometry problems
 // ============================================================
@@ -269,10 +287,14 @@ function genCoef(){
   const rs=r.reactants.reduce((a,b)=>a+b,0), ps=r.products.reduce((a,b)=>a+b,0);
   const correct=ratioLabel(rs,ps);
   const opts=new Set([correct]);
-  while(opts.size<5){
+  let tries=0;
+  while(opts.size<5 && tries<200){
     const da=Math.max(1, rs+randInt(-2,2)), db=Math.max(1, ps+randInt(-2,2));
     opts.add(ratioLabel(da,db));
+    tries++;
   }
+  let extra=1;
+  while(opts.size<5){ opts.add(ratioLabel(rs+extra, ps)); extra++; }
   const choices=shuffle([...opts]).map(v=>({html:v, value:v}));
   const explanation=`
     <div>반응식: ${r.eq}</div>
@@ -359,11 +381,7 @@ function genLimiting(){
     questionText='반응 전 전체 기체 양(mol)과 반응 후 전체 기체 양(mol)의 차이는?';
     correctVal=Math.abs(beforeTotal-afterTotal);
   }
-  const optSet=new Set([correctVal]);
-  while(optSet.size<5){
-    const d=correctVal+choice([-2,-1,1,2,3]);
-    if(d>=0) optSet.add(d);
-  }
+  const optSet=new Set([correctVal, ...numericDistractors(correctVal,4,0)]);
   const choices=shuffle([...optSet]).map(v=>({html:`${v} mol`, value:String(v)}));
 
   const limitName = p<=q ? 'A' : (q<p ? 'B' : 'A, B 동시');
@@ -393,87 +411,167 @@ const GEN_GENERATORS={piston:genPiston, coef:genCoef, decrease:genDecrease, limi
 const GEN_TYPE_NAMES={piston:'피스톤 몰비 모형', coef:'반응식 계수비', decrease:'몰 변화 판별', limiting:'한정 반응물'};
 
 // ============================================================
-// MODE 2 ("시험문제 바탕"): questions inspired by the uploaded exam
-// (분자 구조 / 극성 / 전기음성도 / 루이스 구조 / 옥텟 규칙 / 결합)
+// MODE 2 ("시험문제 바탕"): procedurally varied questions on
+// molecular structure / polarity / electronegativity / bonding
+// Each call randomly recombines a pool of real molecules/atoms,
+// so the same exact question rarely repeats.
 // ============================================================
-const EXAM_BANK=[
-  {category:'electroneg', level:1,
-   prompt:'다음 원자 중 전기음성도가 가장 큰 것은?',
-   choicesRaw:[{text:'F',correct:true},{text:'O'},{text:'N'},{text:'C'},{text:'Na'}],
-   explanation:'<div>전기음성도는 원자가 공유 전자쌍을 끌어당기는 능력으로, 2주기 원소 중에서는 F(플루오린)가 가장 큽니다.</div><div>일반적인 크기 순서: F > O > N > C > Na</div>'},
-  {category:'electroneg', level:1,
-   prompt:'다음 원자 중 전기음성도가 가장 작은 것은?',
-   choicesRaw:[{text:'Na',correct:true},{text:'Mg'},{text:'Al'},{text:'Si'},{text:'Cl'}],
-   explanation:'<div>같은 주기에서는 원자 번호가 커질수록(오른쪽으로 갈수록) 전기음성도가 대체로 커집니다.</div><div>Na이 이 중 가장 왼쪽(금속성이 강한) 원소이므로 전기음성도가 가장 작습니다.</div>'},
-  {category:'polarity', level:1,
-   prompt:'다음 분자 중 무극성 분자인 것은?',
-   choicesRaw:[{text:'CO2',correct:true},{text:'H2O'},{text:'NH3'},{text:'HCl'},{text:'HF'}],
-   explanation:'<div>CO2는 직선형 구조로 두 C=O 결합의 쌍극자가 서로 반대 방향으로 상쇄되어 분자 전체의 쌍극자 모멘트가 0인 무극성 분자입니다.</div><div>나머지는 모두 결합의 쌍극자가 상쇄되지 않는 극성 분자입니다.</div>'},
-  {category:'polarity', level:2,
-   prompt:'다음 분자 중 극성 분자인 것은?',
-   choicesRaw:[{text:'NH3',correct:true},{text:'CH4'},{text:'CO2'},{text:'BF3'},{text:'CCl4'}],
-   explanation:'<div>NH3는 삼각뿔형 구조로 비공유 전자쌍 때문에 대칭을 이루지 못해 쌍극자 모멘트가 0이 아닌 극성 분자입니다.</div><div>CH4(정사면체), CO2(직선형), BF3(평면 삼각형), CCl4(정사면체)는 모두 대칭 구조라 무극성입니다.</div>'},
-  {category:'shape', level:1,
-   prompt:'다음 중 평면 삼각형 구조인 분자는?',
-   choicesRaw:[{text:'BF3',correct:true},{text:'NH3'},{text:'H2O'},{text:'CH4'},{text:'CO2'}],
-   explanation:'<div>BF3은 중심 원자 B 주위에 비공유 전자쌍 없이 3개의 원자가 결합하여 평면 삼각형 구조를 이룹니다.</div><div>NH3는 삼각뿔형, H2O는 굽은형, CH4는 정사면체, CO2는 직선형입니다.</div>'},
-  {category:'shape', level:1,
-   prompt:'다음 중 굽은 형(bent) 구조인 분자는?',
-   choicesRaw:[{text:'H2O',correct:true},{text:'BeCl2'},{text:'CO2'},{text:'BF3'},{text:'CH4'}],
-   explanation:'<div>H2O는 산소에 비공유 전자쌍이 2개 있어 굽은 형(V자형) 구조를 가집니다.</div><div>BeCl2와 CO2는 직선형, BF3은 평면 삼각형, CH4는 정사면체입니다.</div>'},
-  {category:'shape', level:2,
-   prompt:'다음 중 분자 모양이 정사면체인 것은?',
-   choicesRaw:[{text:'CH4',correct:true},{text:'NH3'},{text:'H2O'},{text:'BF3'},{text:'CO2'}],
-   explanation:'<div>CH4은 중심 원자에 비공유 전자쌍이 없고 4개의 원자가 결합하여 정사면체 구조를 가집니다.</div><div>NH3는 전자쌍 배치는 사면체형에 가깝지만 비공유 전자쌍 때문에 분자 모양은 삼각뿔형입니다.</div>'},
-  {category:'lewis', level:3,
-   prompt:'다음 중 옥텟 규칙을 만족하는 분자는?',
-   choicesRaw:[{text:'CH4',correct:true},{text:'BeCl2'},{text:'BF3'},{text:'PCl5'},{text:'SF6'}],
-   explanation:'<div>CH4의 C는 최외각에 8개의 전자(공유 전자 4쌍)를 가져 옥텟 규칙을 만족합니다.</div><div>BeCl2와 BF3은 중심 원자의 전자가 8개보다 적은 옥텟 규칙의 예외(전자 부족)이고, PCl5와 SF6은 8개보다 많은 확장 옥텟의 예외입니다.</div>'},
-  {category:'lewis', level:1,
-   prompt:'NH3 분자에서 질소(N) 원자의 비공유 전자쌍 수는?',
-   choicesRaw:[{text:'1',correct:true},{text:'0'},{text:'2'},{text:'3'},{text:'4'}],
-   explanation:'<div>N은 원자가 전자 5개 중 3개를 H와 공유 결합(3쌍)에 사용하고, 나머지 2개(1쌍)는 비공유 전자쌍으로 남습니다.</div>'},
-  {category:'lewis', level:1,
-   prompt:'H2O 분자에서 산소(O) 원자의 비공유 전자쌍 수는?',
-   choicesRaw:[{text:'2',correct:true},{text:'0'},{text:'1'},{text:'3'},{text:'4'}],
-   explanation:'<div>O는 원자가 전자 6개 중 2개를 H와 공유 결합(2쌍)에 사용하고, 나머지 4개(2쌍)는 비공유 전자쌍으로 남습니다.</div>'},
-  {category:'lewis', level:2,
-   prompt:'CO2 분자에서 탄소(C)와 산소(O) 사이의 결합은 각각 몇 중 결합인가?',
-   choicesRaw:[{text:'2중 결합',correct:true},{text:'1중 결합'},{text:'3중 결합'},{text:'결합 없음'},{text:'이온 결합'}],
-   explanation:'<div>CO2는 O=C=O 구조로, 탄소와 각 산소 사이에 2중 결합(이중 결합)이 하나씩 존재합니다.</div>'},
-  {category:'bonding', level:1,
-   prompt:'다음 중 무극성 공유 결합이 존재하는 물질은?',
-   choicesRaw:[{text:'H2',correct:true},{text:'HCl'},{text:'H2O'},{text:'NH3'},{text:'CO2'}],
-   explanation:'<div>H2는 같은 종류의 원자(H-H) 사이의 결합이므로 전자를 동등하게 공유하는 무극성 공유 결합입니다.</div><div>나머지는 서로 다른 원자 사이의 결합으로, 전기음성도 차이 때문에 극성 공유 결합을 가집니다.</div>'},
-  {category:'bonding', level:1,
-   prompt:'다음 중 다중 결합(2중 또는 3중 결합)을 포함하는 분자는?',
-   choicesRaw:[{text:'N2',correct:true},{text:'H2O'},{text:'NH3'},{text:'CH4'},{text:'HCl'}],
-   explanation:'<div>N2는 두 질소 원자 사이에 3중 결합(삼중 결합)을 가지고 있습니다.</div><div>나머지는 모두 단일 결합으로만 이루어져 있습니다.</div>'},
-  {category:'bonding', level:1,
-   prompt:'다음 중 이온 결합으로 이루어진 물질은?',
-   choicesRaw:[{text:'NaCl',correct:true},{text:'H2O'},{text:'CO2'},{text:'NH3'},{text:'CH4'}],
-   explanation:'<div>NaCl은 금속(Na)과 비금속(Cl) 원소 사이에서 전자가 이동하여 형성된 이온 결합 물질입니다.</div><div>나머지는 모두 비금속 원자 사이의 공유 결합으로 이루어진 분자입니다.</div>'},
+const ATOM_EN=[
+  {sym:'H',en:2.20,level:1},{sym:'Li',en:0.98,level:2},{sym:'Be',en:1.57,level:2},
+  {sym:'B',en:2.04,level:2},{sym:'C',en:2.55,level:1},{sym:'N',en:3.04,level:1},
+  {sym:'O',en:3.44,level:1},{sym:'F',en:3.98,level:1},{sym:'Na',en:0.93,level:1},
+  {sym:'Mg',en:1.31,level:1},{sym:'Al',en:1.61,level:1},{sym:'Si',en:1.90,level:2},
+  {sym:'P',en:2.19,level:2},{sym:'S',en:2.58,level:2},{sym:'Cl',en:3.16,level:1},
+  {sym:'K',en:0.82,level:2},{sym:'Ca',en:1.00,level:2},{sym:'Br',en:2.96,level:3},
+  {sym:'I',en:2.66,level:3},
 ];
+function genElectroneg(){
+  const pool = ATOM_EN.filter(a=>ALLOWED_LEVELS[DIFFICULTY].includes(a.level));
+  const usable = pool.length>=5 ? pool : ATOM_EN;
+  const picked = shuffle(usable).slice(0,5);
+  const askMax = Math.random()<0.5;
+  const sorted = [...picked].sort((a,b)=> askMax ? b.en-a.en : a.en-b.en);
+  const correct = sorted[0].sym;
+  const choices = shuffle(picked).map(a=>({html:a.sym, value:a.sym}));
+  const listStr = [...picked].sort((a,b)=>b.en-a.en).map(a=>`${a.sym}(${a.en})`).join(' > ');
+  const explanation = `<div>전기음성도(대략값): ${listStr}</div><div>따라서 전기음성도가 가장 ${askMax?'큰':'작은'} 원자는 <b>${correct}</b>입니다.</div>`;
+  const promptHTML = `<span class="typeTag">전기음성도</span><p class="prompt">다음 원자 중 전기음성도가 가장 ${askMax?'큰':'작은'} 것은?</p>`;
+  return {promptHTML, choices, correct, explanation};
+}
+
+function pickWithDistractors(targetPool,otherPool,n=5){
+  const target = choice(targetPool);
+  const others = shuffle(otherPool.filter(o=>o.f!==target.f)).slice(0,n-1);
+  return {target, others};
+}
+function filtOrFallback(arr){
+  const f=arr.filter(m=>ALLOWED_LEVELS[DIFFICULTY].includes(m.level));
+  return f.length? f : arr;
+}
+
+const NONPOLAR_MOLS=[
+  {f:'CO2',level:1,why:'직선형 구조로 결합의 쌍극자가 상쇄됩니다.'},
+  {f:'BF3',level:1,why:'평면 삼각형 구조로 대칭을 이룹니다.'},
+  {f:'CH4',level:1,why:'정사면체 구조로 대칭을 이룹니다.'},
+  {f:'CCl4',level:2,why:'정사면체 구조로 대칭을 이룹니다.'},
+  {f:'N2',level:1,why:'같은 원자로 이루어져 결합에 쌍극자가 없습니다.'},
+  {f:'BeCl2',level:2,why:'직선형 구조로 대칭을 이룹니다.'},
+  {f:'SF6',level:3,why:'정팔면체 구조로 대칭을 이룹니다.'},
+];
+const POLAR_MOLS=[
+  {f:'H2O',level:1,why:'굽은 형 구조라 쌍극자가 상쇄되지 않습니다.'},
+  {f:'NH3',level:1,why:'삼각뿔형 구조라 쌍극자가 상쇄되지 않습니다.'},
+  {f:'HCl',level:1,why:'두 원자의 전기음성도 차로 쌍극자가 생깁니다.'},
+  {f:'HF',level:1,why:'두 원자의 전기음성도 차로 쌍극자가 생깁니다.'},
+  {f:'SO2',level:2,why:'굽은 형 구조라 쌍극자가 상쇄되지 않습니다.'},
+  {f:'NF3',level:3,why:'삼각뿔형 구조라 쌍극자가 상쇄되지 않습니다.'},
+  {f:'CHCl3',level:3,why:'비대칭 사면체 구조라 쌍극자가 상쇄되지 않습니다.'},
+];
+function genPolarity(){
+  const askNonpolar = Math.random()<0.5;
+  const targetPool = filtOrFallback(askNonpolar?NONPOLAR_MOLS:POLAR_MOLS);
+  const otherPool = filtOrFallback(askNonpolar?POLAR_MOLS:NONPOLAR_MOLS);
+  const {target, others} = pickWithDistractors(targetPool, otherPool, 5);
+  const all = shuffle([target, ...others]);
+  const choices = all.map(m=>({html:subscript(m.f), value:m.f}));
+  const explanation = `<div>${target.f}: ${target.why} → ${askNonpolar?'무극성':'극성'} 분자</div>` +
+    others.map(o=>`<div>${o.f}: ${o.why} → ${askNonpolar?'극성':'무극성'} 분자</div>`).join('');
+  const promptHTML = `<span class="typeTag">분자의 극성</span><p class="prompt">다음 분자 중 ${askNonpolar?'무극성':'극성'} 분자인 것은?</p>`;
+  return {promptHTML, choices, correct: target.f, explanation};
+}
+
+const SHAPE_MOLS=[
+  {f:'CO2',shape:'직선형',level:1},{f:'BeCl2',shape:'직선형',level:2},
+  {f:'BF3',shape:'평면 삼각형',level:1},{f:'SO3',shape:'평면 삼각형',level:2},
+  {f:'H2O',shape:'굽은 형',level:1},{f:'SO2',shape:'굽은 형',level:2},
+  {f:'NH3',shape:'삼각뿔형',level:1},{f:'PCl3',shape:'삼각뿔형',level:2},
+  {f:'CH4',shape:'정사면체',level:1},{f:'CCl4',shape:'정사면체',level:2},{f:'SiH4',shape:'정사면체',level:3},
+];
+function genShape(){
+  const shapes = uniq(SHAPE_MOLS.map(m=>m.shape));
+  const targetShape = choice(shapes);
+  const usable = filtOrFallback(SHAPE_MOLS);
+  const targetCandidates = usable.filter(m=>m.shape===targetShape);
+  const target = choice(targetCandidates.length ? targetCandidates : SHAPE_MOLS.filter(m=>m.shape===targetShape));
+  const otherCandidates = usable.filter(m=>m.shape!==targetShape && m.f!==target.f);
+  const others = shuffle(otherCandidates.length>=4 ? otherCandidates : SHAPE_MOLS.filter(m=>m.shape!==targetShape && m.f!==target.f)).slice(0,4);
+  const all = shuffle([target, ...others]);
+  const choices = all.map(m=>({html:subscript(m.f), value:m.f}));
+  const explanation = `<div>${target.f}: ${target.shape} 구조</div>` + others.map(o=>`<div>${o.f}: ${o.shape} 구조</div>`).join('');
+  const promptHTML = `<span class="typeTag">분자 모양(VSEPR)</span><p class="prompt">다음 중 ${targetShape} 구조인 분자는?</p>`;
+  return {promptHTML, choices, correct: target.f, explanation};
+}
+
+const LONEPAIR_MOLS=[
+  {f:'H2O',atom:'O',n:2,level:1},{f:'NH3',atom:'N',n:1,level:1},{f:'CH4',atom:'C',n:0,level:1},
+  {f:'HCl',atom:'Cl',n:3,level:2},{f:'H2S',atom:'S',n:2,level:2},{f:'PH3',atom:'P',n:1,level:2},
+  {f:'BF3',atom:'B',n:0,level:1},{f:'SiH4',atom:'Si',n:0,level:3},{f:'CO2',atom:'C',n:0,level:1},
+];
+function genLonePair(){
+  const pool = filtOrFallback(LONEPAIR_MOLS);
+  const item = choice(pool);
+  const correct=item.n;
+  const choices=shuffle([0,1,2,3,4]).map(v=>({html:String(v), value:String(v)}));
+  const explanation = `<div>${item.f} 분자에서 ${item.atom} 원자의 비공유 전자쌍 수는 ${correct}개입니다.</div>`;
+  const promptHTML = `<span class="typeTag">루이스 구조·옥텟 규칙</span><p class="prompt">${item.f} 분자에서 ${item.atom} 원자의 비공유 전자쌍 수는?</p>`;
+  return {promptHTML, choices, correct:String(correct), explanation};
+}
+const OCTET_OK=[{f:'CH4',level:1},{f:'NH3',level:1},{f:'H2O',level:1},{f:'CO2',level:1},{f:'HCl',level:1},{f:'H2S',level:2},{f:'PH3',level:2},{f:'SiH4',level:3},{f:'CCl4',level:2}];
+const OCTET_EXC=[{f:'BeCl2',level:2,why:'중심 원자 전자가 4개뿐(전자 부족)'},{f:'BF3',level:1,why:'중심 원자 전자가 6개뿐(전자 부족)'},{f:'AlCl3',level:2,why:'중심 원자 전자가 6개뿐(전자 부족)'},{f:'PCl5',level:3,why:'중심 원자 전자가 10개(확장 옥텟)'},{f:'SF6',level:3,why:'중심 원자 전자가 12개(확장 옥텟)'}];
+function genOctet(){
+  const askOK = Math.random()<0.5;
+  const targetPool= filtOrFallback(askOK?OCTET_OK:OCTET_EXC);
+  const otherPool = filtOrFallback(askOK?OCTET_EXC:OCTET_OK);
+  const {target, others} = pickWithDistractors(targetPool, otherPool, 5);
+  const all = shuffle([target, ...others]);
+  const choices = all.map(m=>({html:subscript(m.f), value:m.f}));
+  const explanation = askOK
+    ? `<div>${target.f}는 중심 원자가 최외각 전자 8개를 가져 옥텟 규칙을 만족합니다.</div>` + others.map(o=>`<div>${o.f}: ${o.why} → 옥텟 규칙 예외</div>`).join('')
+    : `<div>${target.f}: ${target.why} → 옥텟 규칙 예외</div>` + others.map(o=>`<div>${o.f}는 옥텟 규칙을 만족합니다.</div>`).join('');
+  const promptHTML = `<span class="typeTag">루이스 구조·옥텟 규칙</span><p class="prompt">다음 중 옥텟 규칙을 ${askOK?'만족하는':'만족하지 않는(예외인)'} 분자는?</p>`;
+  return {promptHTML, choices, correct: target.f, explanation};
+}
+const MULTI_BOND=[{f:'N2',level:1,d:'3중 결합'},{f:'O2',level:1,d:'2중 결합'},{f:'CO2',level:1,d:'2중 결합(2개)'}];
+const SINGLE_BOND=[{f:'H2O',level:1},{f:'NH3',level:1},{f:'CH4',level:1},{f:'HCl',level:1},{f:'H2',level:1},{f:'F2',level:2},{f:'Cl2',level:2}];
+function genMultiBond(){
+  const {target, others} = pickWithDistractors(filtOrFallback(MULTI_BOND), filtOrFallback(SINGLE_BOND), 5);
+  const all = shuffle([target, ...others]);
+  const choices = all.map(m=>({html:subscript(m.f), value:m.f}));
+  const explanation = `<div>${target.f}: ${target.d}을 포함합니다.</div>` + others.map(o=>`<div>${o.f}: 단일 결합으로만 이루어져 있습니다.</div>`).join('');
+  const promptHTML = `<span class="typeTag">루이스 구조·옥텟 규칙</span><p class="prompt">다음 중 다중 결합(2중 또는 3중 결합)을 포함하는 분자는?</p>`;
+  return {promptHTML, choices, correct: target.f, explanation};
+}
+function genLewis(){ return choice([genLonePair, genOctet, genMultiBond])(); }
+
+const IONIC=[{f:'NaCl',level:1},{f:'MgO',level:1},{f:'CaCl2',level:2},{f:'KBr',level:2},{f:'Na2O',level:2},{f:'CaO',level:2}];
+const COVALENT=[{f:'H2O',level:1},{f:'CO2',level:1},{f:'NH3',level:1},{f:'CH4',level:1},{f:'HCl',level:1},{f:'SiH4',level:3},{f:'PCl3',level:2}];
+function genIonicCovalent(){
+  const askIonic = Math.random()<0.5;
+  const {target, others} = pickWithDistractors(filtOrFallback(askIonic?IONIC:COVALENT), filtOrFallback(askIonic?COVALENT:IONIC), 5);
+  const all=shuffle([target,...others]);
+  const choices=all.map(m=>({html:subscript(m.f), value:m.f}));
+  const explanation = `<div>${target.f}는 ${askIonic?'금속과 비금속 사이의 이온 결합':'비금속 원자 사이의 공유 결합'}으로 이루어져 있습니다.</div>` +
+    others.map(o=>`<div>${o.f}는 ${askIonic?'공유':'이온'} 결합 물질입니다.</div>`).join('');
+  const promptHTML = `<span class="typeTag">화학 결합의 종류</span><p class="prompt">다음 중 ${askIonic?'이온':'공유'} 결합으로 이루어진 물질은?</p>`;
+  return {promptHTML, choices, correct: target.f, explanation};
+}
+const NONPOLAR_BOND=[{f:'H2',level:1},{f:'N2',level:1},{f:'O2',level:1},{f:'Cl2',level:2},{f:'F2',level:2}];
+const POLAR_BOND=[{f:'HCl',level:1},{f:'H2O',level:1},{f:'NH3',level:1},{f:'CO2',level:1},{f:'HF',level:2}];
+function genBondPolarity(){
+  const askNonpolar = Math.random()<0.5;
+  const {target, others} = pickWithDistractors(filtOrFallback(askNonpolar?NONPOLAR_BOND:POLAR_BOND), filtOrFallback(askNonpolar?POLAR_BOND:NONPOLAR_BOND), 5);
+  const all=shuffle([target,...others]);
+  const choices=all.map(m=>({html:subscript(m.f), value:m.f}));
+  const explanation = `<div>${target.f}는 ${askNonpolar?'같은 원자 사이':'서로 다른 원자 사이'}의 결합으로 ${askNonpolar?'무극성':'극성'} 공유 결합을 가집니다.</div>` +
+    others.map(o=>`<div>${o.f}는 ${askNonpolar?'극성':'무극성'} 공유 결합을 가집니다.</div>`).join('');
+  const promptHTML = `<span class="typeTag">화학 결합의 종류</span><p class="prompt">다음 중 ${askNonpolar?'무극성':'극성'} 공유 결합이 존재하는 것은?</p>`;
+  return {promptHTML, choices, correct: target.f, explanation};
+}
+function genBonding(){ return choice([genIonicCovalent, genBondPolarity])(); }
+
 const EXAM_CATEGORIES=['electroneg','polarity','shape','lewis','bonding'];
 const EXAM_TYPE_NAMES={electroneg:'전기음성도', polarity:'분자의 극성', shape:'분자 모양(VSEPR)', lewis:'루이스 구조·옥텟 규칙', bonding:'화학 결합의 종류'};
-function buildExamQuestion(item){
-  const opts=shuffle(item.choicesRaw);
-  const correctText=item.choicesRaw.find(c=>c.correct).text;
-  const choices=opts.map(o=>({html:subscript(o.text), value:o.text}));
-  const promptHTML=`
-    <span class="typeTag">${EXAM_TYPE_NAMES[item.category]}</span>
-    <p class="prompt">${item.prompt}</p>
-    <p class="question">정답을 고르세요.</p>`;
-  return {promptHTML, choices, correct:correctText, explanation:item.explanation};
-}
-function genExamCategory(cat){
-  return function(){
-    const pool = EXAM_BANK.filter(it=>it.category===cat && ALLOWED_LEVELS[DIFFICULTY].includes(it.level));
-    const item = choice(pool.length?pool:EXAM_BANK.filter(it=>it.category===cat));
-    return buildExamQuestion(item);
-  };
-}
-const EXAM_GENERATORS={}; EXAM_CATEGORIES.forEach(c=>EXAM_GENERATORS[c]=genExamCategory(c));
+const EXAM_GENERATORS={electroneg:genElectroneg, polarity:genPolarity, shape:genShape, lewis:genLewis, bonding:genBonding};
 
 // ============================================================
 // active mode pointers (switched by activateMode())
